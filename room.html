@@ -18,7 +18,9 @@
             <span id="room-id">房號：???</span>
             <button id="leave-room" onclick="leaveRoom()">離開房間</button>
 
-            <button onclick="changeState(this)">切換遊戲狀態</button>
+            <button onclick="changeState(this)">停止中</button>
+
+            <button onclick="changeTurn(this)">我的回合</button>
         </div>
 
         <div id="room-container2">
@@ -33,21 +35,23 @@
 
             <div class="card-item" data-index="1">
 
-                <div class="card-img" onclick="cardImg(event)"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name">王小美</div>
+                </div>
 
                 <div class="card-folded" onclick="cardFolded(event)"></div>
                 
-                <div class="card-edit-fold" onclick="cardEditFold(event)">
+                <!-- <div class="card-edit-fold" onclick="cardEditFold(event)">
 
                     <button class="edit" onclick="edit(event)">編輯資訊</button>
                     <button class="fold" onclick="fold(event)">蓋牌</button>
 
-                </div>
+                </div> -->
 
                 <div class="card-img-name" onclick="cardImgName(event)">
 
-                    <button class="img" onclick="img(event)">上傳圖片</button>
-                    <button class="name" onclick="name(event)">更改姓名</button>
+                    <button class="uploadImg" onclick="uploadImg(event)">上傳圖片</button>
+                    <button class="changeName" onclick="changeName(event)">更改姓名</button>
 
                 </div>
 
