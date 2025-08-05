@@ -89,10 +89,17 @@ main {
 .card-img {
     background-color: aliceblue;
     display: flex;
-    /* background-image: url(""); */
+    background-image: url("sources/photo.png");
+    background-position: center;
+    background-size: cover;
 }
 
-.card-folded {}
+
+.card-folded {
+    background-image: url("sources/folded.png");
+    background-position: center;
+    background-size: cover;
+}
 
 .card-edit-fold {}
 

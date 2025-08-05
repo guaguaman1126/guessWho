@@ -17,6 +17,8 @@
         <div id="room-container1">
             <span id="room-id">房號：???</span>
             <button id="leave-room" onclick="leaveRoom()">離開房間</button>
+
+            <button onclick="changeState(this)">切換遊戲狀態</button>
         </div>
 
         <div id="room-container2">
@@ -31,11 +33,11 @@
 
             <div class="card-item" data-index="1">
 
-                <div class="card-img" onclick="cardImg(event)">照片</div>
+                <div class="card-img" onclick="cardImg(event)"></div>
 
-                <div class="card-folded" onclick="cardFolded(event)">蓋牌狀態</div>
+                <div class="card-folded" onclick="cardFolded(event)"></div>
                 
-                <div class="card-edit-fold" onclick="cardEditFolded(event)">
+                <div class="card-edit-fold" onclick="cardEditFold(event)">
 
                     <button class="edit" onclick="edit(event)">編輯資訊</button>
                     <button class="fold" onclick="fold(event)">蓋牌</button>
