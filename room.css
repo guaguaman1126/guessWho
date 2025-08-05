@@ -1,0 +1,84 @@
+/* body */
+body{
+    background: linear-gradient(to bottom right, #f9eec0, #ffe8cc);
+}
+
+/* header */
+header {
+    height: 10vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+#room-container1 {
+    padding:  10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+#room-container2 {
+    display: flex;
+    justify-content: center;
+}
+
+
+/* main */
+main {
+    padding: 16px;
+    /* 或你想要的其他值，例如 2rem、5% 等 */
+    height: 80vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    
+}
+
+/* 圖片容器*/
+
+#cards-container {
+    display: grid;
+    grid-template-columns: repeat(6, 17vh);
+    grid-template-rows: repeat(4, 17vh);
+    gap: 15px;
+    padding: 15px;
+
+    background-color: #ffffff;
+    border: 1px solid black;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    
+}
+
+
+/* 圖片item */
+.card-item {
+    aspect-ratio: 1;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    background-color: #d1d88f;
+    border: 1px solid black;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out;
+}
+
+.card-item:hover {
+    transform: scale(1.03);
+}
+
+.card-img,
+.card-folded,
+.card-edit\&fold,
+.card-img\&name,
+.card-guess\&fold {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}

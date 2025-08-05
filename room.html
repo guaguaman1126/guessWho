@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>遊戲房間</title>
+
+    <link rel="stylesheet" href="room.css" />
+</head>
+
+<body>
+
+    <!-- ⬆️ 顯示資訊狀態與退出 -->
+    <header class="room-header">
+
+        <div id="room-container1">
+            <span id="room-id">房號：???</span>
+            <button id="leave-room" onclick="leaveRoom()">離開房間</button>
+        </div>
+
+        <div id="room-container2">
+            <span d="room-state">請準備</span>
+        </div>
+
+    </header>
+
+    <!-- ⏹️ 遊戲主畫面 -->
+    <main class="game-area">
+        <div id="cards-container">
+
+            <div class="card-item" data-index="1">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="2">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="3">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="4">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="5">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="6">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="7">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="8">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="9">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="10">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="11">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="12">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="13">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="14">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="15">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="16">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="17">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="18">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="19">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="20">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="21">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="22">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="23">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+            <div class="card-item" data-index="24">
+
+                <div class="card-img"></div>
+                <div class="card-folded"></div>
+                <div class="card-edit&fold"></div>
+                <div class="card-img&name"></div>
+                <div class="card-guess&fold"></div>
+
+            </div>
+
+
+
+
+
+    </main>
+
+
+    <!-- JS -->
+    <script src="room.js"></script>
+</body>
+
+</html>

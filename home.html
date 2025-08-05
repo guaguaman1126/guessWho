@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>猜猜我是誰｜進入房間</title>
+  <style>
+    body {
+      background: linear-gradient(to bottom right, #f9eec0, #ffe8cc);
+      font-family: "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 2.2em;
+      margin-bottom: 0.5em;
+      color: #5a3e1b;
+    }
+
+    .rules {
+      background-color: #fff7d6;
+      border: 1px solid #e7c888;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 500px;
+      text-align: left;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+      line-height: 1.5em;
+      color: #4e3d2a;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      border: 1px solid #cfa75d;
+      border-radius: 8px;
+      font-size: 1em;
+      width: 180px;
+    }
+
+    button {
+      padding: 10px 18px;
+      background-color: #f5b942;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #d4972f;
+    }
+
+    footer {
+      margin-top: auto;
+      font-size: 0.9em;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>猜猜我是誰 🎭</h1>
+
+  <div class="rules">
+    <strong>遊戲規則：</strong><br>
+    1. 每位玩家會看到一排角色圖片，並選擇一張作為自己的角色。<br>
+    2. 輪流提問「這個人戴眼鏡嗎？」「這個人是女生嗎？」等問題，對方只能回答「是」或「不是」。<br>
+    3. 根據回答排除角色，直到成功猜出對方的角色為止！<br>
+    4. 自己可以上傳照片創建新房間，也可以輸入房號加入別人的遊戲。<br>
+  </div>
+
+  <div class="input-group">
+    <input type="text" id="roomInput" placeholder="輸入房間號碼">
+    <button onclick="joinRoom()">加入 / 創建房間</button>
+  </div>
+
+  <footer>
+    © 2025 Guess Who Online Edition
+  </footer>
+
+  <script>
+    function joinRoom() {
+      const roomId = document.getElementById("roomInput").value.trim();
+      if (roomId === "") {
+        alert("請輸入房號！");
+        return;
+      }
+
+      // 假設跳轉到 room.html?room=xxxx
+      window.location.href = `room.html?room=${roomId}`;
+    }
+  </script>
+
+</body>
+</html>
