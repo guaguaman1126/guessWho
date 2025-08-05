@@ -31,11 +31,30 @@
 
             <div class="card-item" data-index="1">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-img" onclick="cardImg(event)">照片</div>
+
+                <div class="card-folded" onclick="cardFolded(event)">蓋牌狀態</div>
+                
+                <div class="card-edit-fold" onclick="cardEditFolded(event)">
+
+                    <button class="edit" onclick="edit(event)">編輯資訊</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+
+                </div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <button class="img" onclick="img(event)">上傳圖片</button>
+                    <button class="name" onclick="name(event)">更改姓名</button>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+
+                </div>
 
             </div>
 
@@ -43,9 +62,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -53,9 +72,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -63,9 +82,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -73,9 +92,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -83,9 +102,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -93,9 +112,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -103,9 +122,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -113,9 +132,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -123,9 +142,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -133,9 +152,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -143,9 +162,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -153,9 +172,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -163,9 +182,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -173,9 +192,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -183,9 +202,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -193,9 +212,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -203,9 +222,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -213,9 +232,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -223,9 +242,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -233,9 +252,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -243,9 +262,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -253,9 +272,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
@@ -263,9 +282,9 @@
 
                 <div class="card-img"></div>
                 <div class="card-folded"></div>
-                <div class="card-edit&fold"></div>
-                <div class="card-img&name"></div>
-                <div class="card-guess&fold"></div>
+                <div class="card-edit-fold"></div>
+                <div class="card-img-name"></div>
+                <div class="card-guess-fold"></div>
 
             </div>
 
