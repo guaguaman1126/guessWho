@@ -7,6 +7,9 @@
     <title>遊戲房間</title>
 
     <link rel="stylesheet" href="room.css" />
+    <!-- Cropper CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
+
 </head>
 
 <body>
@@ -21,6 +24,8 @@
             <button onclick="changeState(this)">停止中</button>
 
             <button onclick="changeTurn(this)">我的回合</button>
+
+            <button onclick="updateAll()">刷新全部</button>
         </div>
 
         <div id="room-container2">
@@ -33,276 +38,697 @@
     <main class="game-area">
         <div id="cards-container">
 
+
             <div class="card-item" data-index="1">
 
                 <div class="card-img" onclick="cardImg(event)">
-                    <div class="name">王小美</div>
+                    <div class="name"></div>
                 </div>
 
                 <div class="card-folded" onclick="cardFolded(event)"></div>
-                
-                <!-- <div class="card-edit-fold" onclick="cardEditFold(event)">
-
-                    <button class="edit" onclick="edit(event)">編輯資訊</button>
-                    <button class="fold" onclick="fold(event)">蓋牌</button>
-
-                </div> -->
 
                 <div class="card-img-name" onclick="cardImgName(event)">
 
-                    <button class="uploadImg" onclick="uploadImg(event)">上傳圖片</button>
-                    <button class="changeName" onclick="changeName(event)">更改姓名</button>
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
 
                 </div>
 
                 <div class="card-guess-fold" onclick="cardGuessFold(event)">
-
                     <button class="guess" onclick="guess(event)">猜測目標</button>
                     <button class="fold" onclick="fold(event)">蓋牌</button>
-
                 </div>
 
             </div>
 
             <div class="card-item" data-index="2">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="3">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="4">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="5">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="6">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="7">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="8">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="9">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="10">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="11">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="12">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="13">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="14">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="15">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="16">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="17">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="18">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="19">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="20">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="21">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="22">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="23">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
             <div class="card-item" data-index="24">
 
-                <div class="card-img"></div>
-                <div class="card-folded"></div>
-                <div class="card-edit-fold"></div>
-                <div class="card-img-name"></div>
-                <div class="card-guess-fold"></div>
+                <div class="card-img" onclick="cardImg(event)">
+                    <div class="name"></div>
+                </div>
+
+                <div class="card-folded" onclick="cardFolded(event)"></div>
+
+                <div class="card-img-name" onclick="cardImgName(event)">
+
+                    <label class="uploadImg" onclick="event.stopPropagation()">上傳圖片
+                        <input type="file" class="file-input" accept="image/*" />
+                    </label>
+
+                    <div class="name-editor">
+                        <span>更改姓名</span>
+                        <input type="text" class="name-input" />
+                    </div>
+
+                </div>
+
+                <div class="card-guess-fold" onclick="cardGuessFold(event)">
+                    <button class="guess" onclick="guess(event)">猜測目標</button>
+                    <button class="fold" onclick="fold(event)">蓋牌</button>
+                </div>
 
             </div>
 
 
-
+            <div class="crop-container" id="crop-container">
+                <img id="crop-area" />
+                <br />
+                <button id="crop-btn">裁切並壓縮</button>
+            </div>
 
 
     </main>
 
-
+    <!-- database -->
+    <script src="data.js" type="module"></script>
     <!-- JS -->
     <script src="room.js"></script>
+    <!-- Cropper JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    
+
 </body>
 
 </html>

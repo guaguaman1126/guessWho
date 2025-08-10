@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+  <title>更改姓名按鈕切換</title>
+  <style>
+    .name-editor {
+      display: inline-block;
+      /* margin-bottom: 10px; */
+    }
+
+    .name-input {
+      font-size: 16px;
+      padding: 4px 8px;
+      display: none;
+    }
+
+    .change-name {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="name-editor">
+    <button class="change-name">更改姓名</button>
+    <input type="text" class="name-input" />
+  </div>
+
+  <script>
+    const editors = document.querySelectorAll('.name-editor');
+
+    editors.forEach(container => {
+      const btn = container.querySelector('.change-name');
+      const input = container.querySelector('.name-input');
+
+      btn.addEventListener('click', () => {
+        btn.style.display = 'none';
+        input.style.display = 'inline-block';
+        input.focus();
+      });
+
+      input.addEventListener('blur', () => {
+        btn.style.display = 'inline-block';
+        input.style.display = 'none';
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          input.blur();
+        }
+      });
+    });
+  </script>
+
+</body>
+
+</html>

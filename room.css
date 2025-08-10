@@ -65,6 +65,21 @@ main {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.card-guess-fold button,
+.uploadImg,
+.name-editor {
+    display: inline-block;
+    box-sizing: border-box;
+    width: 60%;
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    border: none;
+}
+
 
 .card-img,
 .card-folded,
@@ -91,6 +106,7 @@ main {
     background-image: url("sources/photo.png");
     background-position: center;
     background-size: cover;
+
 }
 
 
@@ -100,6 +116,10 @@ main {
     background-size: cover;
 }
 
+
+.card-folded {
+    z-index: 2;
+}
 .card-edit-fold {}
 
 .card-img-name {}
@@ -107,13 +127,73 @@ main {
 .card-guess-fold {}
 
 .name {
-  position: absolute;
-  bottom: 5%;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.5); /* 半透明黑色 */
-  color: white; /* 字體白色才能看清楚 */
-  padding: 2% 6%;
-  border-radius: 6px;
-  border: none;
+    position: absolute;
+    bottom: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    /* 半透明黑色 */
+    color: white;
+    /* 字體白色才能看清楚 */
+    padding: 2% 6%;
+    border-radius: 6px;
+    border: none;
+    z-index: 1;
+    text-align: center;
+}
+
+/* 裁切圖片 */
+.crop-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    height: 60vh;
+    width: 50vw;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    display: none;
+    text-align: center;
+    overflow: hidden;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#crop-area {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+#crop-btn {
+    margin-top: 10px;
+    display: inline-block;
+}
+
+.file-input {
+    display: none;
+}
+
+/* 更改姓名 */
+.name-editor {
+    /* display: inline-block; */
+    position: relative;
+}
+
+.name-input {
+    position: absolute;
+    box-sizing: border-box;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    display: none;
+
+    border: none;
+
 }
