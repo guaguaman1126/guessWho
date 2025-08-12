@@ -21,15 +21,16 @@
             <span id="room-id">房號：???</span>
             <button id="leave-room" onclick="leaveRoom()">離開房間</button>
 
-            <button onclick="changeState(this)">停止中</button>
+            <button onclick="changeState()">歸零房間</button>
 
-            <button onclick="changeTurn(this)">我的回合</button>
+            <button id ="end-turn" onclick="turnChange(enemyTurn)">結束回合</button>
 
             <button onclick="updateAll()">刷新全部</button>
         </div>
 
         <div id="room-container2">
-            <span d="room-state">請準備</span>
+            <button id="room-state" onclick="toggleReady()">尚未準備</button>
+            <span id="turn">誰的回合</span>
         </div>
 
     </header>
@@ -55,8 +56,10 @@
 
                     <div class="name-editor">
                         <span>更改姓名</span>
-                        <input type="text" class="name-input" />
+                        <input type="text" class="name-input" value="王大明" />
                     </div>
+
+                    <div class="chose-target" onclick="choseTarget(event)">選擇目標</div>
 
                 </div>
 
@@ -113,6 +116,8 @@
                         <span>更改姓名</span>
                         <input type="text" class="name-input" />
                     </div>
+
+                    <div class="chose-target" onclick="choseTarget(event)">選擇目標</div>
 
                 </div>
 
@@ -717,9 +722,20 @@
                 <br />
                 <button id="crop-btn">裁切並壓縮</button>
             </div>
+        </div>
+
 
 
     </main>
+    <footer>
+        <button onclick="showMyTarget()">顯示我的目標</button>
+        <div id="target-overlay" hidden>
+            <div id="target-img">
+                <div id="target-name">55</div>
+            </div>
+        </div>
+
+    </footer>
 
     <!-- database -->
     <script src="data.js" type="module"></script>
@@ -727,7 +743,7 @@
     <script src="room.js"></script>
     <!-- Cropper JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    
+
 
 </body>
 

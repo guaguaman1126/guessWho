@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebas
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
+    databaseURL: "https://guesswho-9b36a-default-rtdb.asia-southeast1.firebasedatabase.app",
     apiKey: "AIzaSyD0pR_cojwInvtrjJUs0DrRrYM1zwIHgYU",
     authDomain: "guesswho-9b36a.firebaseapp.com",
     projectId: "guesswho-9b36a",
@@ -9,6 +10,8 @@ const firebaseConfig = {
     messagingSenderId: "934150594298",
     appId: "1:934150594298:web:20ee190b8ab4c793b9f343",
     measurementId: "G-2ZXSVW7Y00"
+
+
 };
 
 const app = initializeApp(firebaseConfig);
@@ -69,13 +72,15 @@ class Database {
         console.group('Document fields');
         const fields = await Promise.all([
             this.getField(path, id, 'isOpened'),
-            this.getField(path, id, 'target'),
+            this.getField(path, id, 'targetA'),
+            this.getField(path, id, 'targetB'),
+            this.getField(path, id, 'isReadyA'),
+            this.getField(path, id, 'isReadyB'),
             this.getField(path, id, 'currentTurn'),
-            this.getField(path, id, 'playersCount'),
             this.getField(path, id, 'guess'),
             this.getField(path, id, 'isPlaying')
         ]);
-        ['isOpened','target', 'currentTurn', 'playersCount', 'guess', 'isPlaying'].forEach((key, i) => console.log(`${key}:`, fields[i]));
+        ['isOpened', 'targetA', 'targetB', 'isReadyA', 'isReadyB', 'currentTurn', 'guess', 'isPlaying'].forEach((key, i) => console.log(`${key}:`, fields[i]));
         console.groupEnd();
     }
 
@@ -83,9 +88,11 @@ class Database {
         const path = 'rooms';
         await Promise.all([
             this.setField(path, id, 'isOpened', true),
-            this.setField(path, id, 'target', null),
-            this.setField(path, id, 'currentTurn', true),
-            this.setField(path, id, 'playersCount', 1),
+            this.setField(path, id, 'currentTurn', 'A'),
+            this.setField(path, id, 'targetA', 0),
+            this.setField(path, id, 'targetB', 0),
+            this.setField(path, id, 'isReadyA', false),
+            this.setField(path, id, 'isReadyB', false),
             this.setField(path, id, 'guess', null),
             this.setField(path, id, 'isPlaying', false),
             // 這兩行會各自建立 24 個空字串
@@ -102,4 +109,8 @@ const dbService = new Database(db);
 
 // 匯出 class 跟物件都可以
 export { Database, dbService };
+
+
+
+
 

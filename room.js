@@ -1,31 +1,74 @@
 // 初始化創建資料庫跟相關function
 
 let dbService;
+let seatsDb;
 let roomID;
+let myTarget;
+let enemyTarget;
+let isReady;
+let enemyIsReady;
+let myTurn;
+let enemyTurn;
+
 document.addEventListener('DOMContentLoaded', () => {
     setRoomIdFromURL();
 });
 
-function initializing() {
-    (async () => {
-        try {
-            const moduleObj = await import('./data.js');
-            dbService = moduleObj.dbService; // 這裡才載入 module
 
-            let isOpened = await dbService.getField('rooms', roomID, 'isOpened');
-            if (!isOpened == true) {
-                await dbService.setRoom(roomID);
-            }
-            await dbService.show('rooms', roomID);
-            updateAll();
-            // await dbService.setField('rooms', '1126','imageNames',12<'哈哈');
-        } catch (e) {
-            console.error('載入 db 模組失敗：', e);
+// realtime database
+
+async function initializing() {
+    try {
+        const moduleObj = await import('./data.js');
+        dbService = moduleObj.dbService; // fsdb
+
+        const mod = await import('./rtdb.js');
+        const { rtdbService /*, RtdbSeats*/ } = mod;
+        seatsDb = rtdbService.createSeats({ roomId: roomID });
+        await seatsDb.setSeat('auto');
+
+        if (await seatsDb.getPlayersCount() > 2) {
+            alert("該房間已滿");
+            window.location.href = `home.html`;
         }
-    })();
+
+        let isOpened = await dbService.getField('rooms', roomID, 'isOpened');
+
+        const seat = await seatsDb.getSeat();
+        if (seat === 'A') {
+            myTarget = 'targetA';
+            enemyTarget = 'targetB';
+            isReady = "isReadyA";
+            enemyIsReady = "isReadyB";
+            myTurn = "A";
+            enemyTurn = "B";
+
+        } else if (seat === 'B') {
+            myTarget = 'targetB';
+            enemyTarget = 'targetA';
+            isReady = "isReadyB";
+            enemyIsReady = "isReadyA";
+            myTurn = "B";
+            enemyTurn = "A";
+        }
+
+        if (!isOpened) {
+            await dbService.setRoom(roomID);//缺邏輯把isOpened關掉
+        }
+
+        await seatsDb.show();
+        await dbService.show('rooms', roomID);
+
+        const stopIsPlaying = watchIsPlaying(roomID, { interval: 1000, immediate: false });
+        const stopWatchTurn = watchCurrentTurn(roomID, { immediate: true });
+
+        updateAll();
+    } catch (e) {
+        console.error('載入 db 模組失敗：', e);
+    }
 }
 
-//更新名子(上傳下載) 
+//更新名子(上傳) 
 async function updateName(dataIndex, name, nameContainer) {
 
     if (!dbService) throw new Error('dbService 尚未初始化');
@@ -60,7 +103,7 @@ function setRoomIdFromURL() {
 }
 
 
-// 下載所有圖檔姓名資料
+// 下載所有圖檔姓名資料 更新目標 準備
 async function updateAll() {
     if (!dbService) throw new Error('dbService 尚未初始化');
 
@@ -78,14 +121,17 @@ async function updateAll() {
         // 名稱：遠端 vs 本地
         const nameRemote = (namesRemote?.[i] ?? '').trim();
         const nameEl = cardItem.querySelector('.name');
+        const inputEl = cardItem.querySelector('.name-input');
         if (nameEl) {
             const nameLocal = (nameEl.textContent ?? '').trim();
             if (nameRemote !== nameLocal) {
                 nameEl.textContent = nameRemote;
+                inputEl.value = nameRemote;
                 console.log(`更新第${index}張卡片的名字為${nameEl.textContent}`);
             }
 
         }
+
 
         // 圖片：一律使用 background-image
         //     const urlRemote = (urlsRemote?.[i] ?? '').trim();
@@ -97,10 +143,37 @@ async function updateAll() {
         //     }
         //   }
     }
+
+    //  我的目標資訊:
+    updateTarget();
+
+    //更新準備按鈕
+    const btn = document.getElementById('room-state');
+    if (await dbService.getField('rooms', roomID, 'isPlaying')) {
+        stateChange('遊戲開始');
+    } else if (!await dbService.getField('rooms', roomID, isReady)) {
+        stateChange('尚未準備');
+    } else {
+        stateChange('已準備');
+    }
+
+    //更新回合按鈕
+    if (await dbService.getField('rooms', roomID, 'currentTurn') === myTurn) {
+        turnChange(myTurn);
+    } else {
+        turnChange(enemyTurn);
+    }
 }
 
 
 // 檢查所有條件
+function check() {
+
+}
+
+
+
+
 
 
 
@@ -115,12 +188,11 @@ function leaveRoom() {
 
 
 
-let gamePlaying = false;
-let myTurn = true;
+
 
 
 // "圖片介面"點擊事件
-function cardImg(e) {
+async function cardImg(e) {
     let img = e.target;
     if (!img.classList.contains('card-img')) {
         img = img.closest('.card-img');
@@ -128,7 +200,7 @@ function cardImg(e) {
 
 
     const parentCard = img.closest('.card-item');
-    if (!gamePlaying) {
+    if (!await dbService.getField('rooms', roomID, 'isPlaying')) {
 
         const imgName = parentCard.querySelector('.card-img-name');
 
@@ -247,14 +319,23 @@ function fold(e) {
 }
 
 //猜目標
-function guess(e) {
+async function guess(e) {
     e.stopPropagation();
-    if (myTurn) {
-        console.log("猜目標");
+    if (await dbService.getField('rooms', roomID, 'currentTurn') === myTurn) {
+        const target = e.target;
+        const parentCard = target.closest('.card-item');
+        const guess = Number(parentCard.dataset.index);
+        const enemyGuess = await dbService.getField('rooms', roomID, enemyTarget);
+        if (guess === enemyGuess) {
+            alert("你贏了");
+            await dbService.setField('rooms', roomID, 'isPlayimg', false,);
+        }
     } else {
         alert("現在是敵方回合不能猜目標");
         console.log("不能猜目標");
     }
+
+
 
 }
 
@@ -368,26 +449,257 @@ editors.forEach(container => {
     });
 });
 
+// 準備確認
+async function toggleReady() {
+    const btn = document.getElementById('room-state');
+    if (await dbService.getField('rooms', roomID, myTarget) === 0) {
+        alert("請先選目標");
+        return;
+    }
+    // 判斷目前狀態
+    if (btn.textContent === '尚未準備') {
+        stateChange('已準備');
+        if (await dbService.getField('rooms', roomID, enemyIsReady)) {
+            await dbService.setField('rooms', roomID, 'isPlaying', true);
+        }
 
-
-
-
-
-// 改變遊戲狀態
-function changeState(btn) {
-    gamePlaying = !gamePlaying;
-    btn.textContent = gamePlaying ? "進行中" : "停止中";
-    console.log("遊戲狀態切換為：", gamePlaying ? "進行中" : "停止中");
+    } else {
+        stateChange('尚未準備');
+    }
 }
 
-// 改變回合
-function changeTurn(btn) {
-    myTurn = !myTurn;
-    btn.textContent = myTurn ? "我的回合" : "敵方回合";
-    console.log("回合切換為：", myTurn ? "我的回合" : "敵方回合");
+// 狀態按鈕三態變換
+async function stateChange(state) {
+    const btn = document.getElementById('room-state');
+    // 判斷目前狀態
+    if (state === '尚未準備') {
+        await dbService.setField('rooms', roomID, 'isPlaying', false);//這裡把isPlaying關掉
+        btn.textContent = '尚未準備';
+        await dbService.setField('rooms', roomID, isReady, false);
+        btn.disabled = false;
+        btn.style.cursor = "pointer"
+
+    } else if (state === '已準備') {
+
+        btn.textContent = '已準備';
+        await dbService.setField('rooms', roomID, isReady, true);
+        // btn.disabled = false;
+        // btn.style.cursor = "pointer"
+
+
+    } else if (state === '遊戲開始') {
+
+        btn.textContent = "遊戲開始";
+        btn.disabled = true;
+        btn.style.cursor = "default";
+        // await dbService.setField('rooms', roomID, 'isPlaying', true);
+        console.log('雙方都準備，isPlaying改true');
+
+    } else {
+        console.log("三態變換錯誤");
+    }
 }
 
-// 抓取資料庫並更新
 
 
+
+// 重整房間
+async function changeState() {
+
+    await dbService.setRoom(roomID);
+
+}
+
+
+// 點擊顯示我的目標
+const overlay = document.getElementById('target-overlay');
+function showMyTarget() {
+    overlay.hidden = false; document.body.style.overflow = 'hidden';
+}
+function hideTarget() {
+    overlay.hidden = true; document.body.style.overflow = '';
+
+}
+
+overlay.addEventListener('click', e => { if (e.target === overlay) hideTarget(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') hideTarget(); });
+
+
+// 選擇目標
+async function choseTarget(e) {
+    e.stopPropagation();
+
+    const parentCard = e.target.closest('.card-item');
+    if (!parentCard) return; // 保護：避免找不到卡片時出錯
+
+    // 取得卡片的 data-index
+    const index = Number(parentCard.dataset.index);
+
+    // 更新資料庫 target
+    await dbService.setField('rooms', roomID, myTarget, index);
+    updateTarget();
+    console.log(`${myTarget}設為卡片${index}`)
+}
+
+async function updateTarget() {
+
+
+    const targetImgEl = document.getElementById('target-img');
+    const targetNameEl = document.getElementById('target-name');
+
+    // 取得卡片的 data-index
+    const index = await dbService.getField('rooms', roomID, myTarget);
+
+    // 從資料庫抓取對應圖片與名稱
+    const imgUrl = await dbService.getField('rooms', roomID, 'imageUrls', index);
+    const nameValue = await dbService.getField('rooms', roomID, 'imageNames', index);
+
+
+    // 更新 DOM 顯示（改為背景圖片）
+    // targetImgEl.style.backgroundImage = imgUrl ? `url(${imgUrl})` : '';
+    targetNameEl.textContent = nameValue || '';
+}
+
+
+// 偵測isplaying
+// 本地要做的事（自己換成你的實作）
+async function onGameStart() {
+    stateChange('遊戲開始');
+    console.log('[isPlaying] → true，開打！'); /* startGame() */
+
+}
+function onGameStop() {
+    stateChange('尚未準備');
+    console.log('[isPlaying] → false，收工');  /* stopGame() */
+}
+
+/**
+ * 以 dbService 監控 Firestore 的 isPlaying（無需任何 import）
+ * @param {string} roomID
+ * @param {object} opt { interval: 輪詢毫秒數, immediate: 是否第一次就觸發一次, onStart: fn, onStop: fn }
+ * @returns {function} stop() 可停止監控
+ */
+function watchIsPlaying(roomID, opt = {}) {
+    const { interval = 1000, immediate = false, onStart = onGameStart, onStop = onGameStop } = opt;
+
+    let firstCheck = true;
+    let stopped = false;
+    let lastVal;
+
+    const tick = async () => {
+        if (stopped) return;
+        try {
+            const val = !!(await dbService.getField('rooms', roomID, 'isPlaying'));
+            if (firstCheck) {
+                lastVal = val;
+                firstCheck = false;
+                if (immediate) val ? onStart() : onStop();
+            } else if (val !== lastVal) {
+                lastVal = val;
+                val ? onStart() : onStop();
+            }
+            console.log('遊戲狀態偵測循環');
+        } catch (e) {
+            console.error('[watchIsPlaying] 讀取失敗：', e);
+        } finally {
+            if (!stopped) setTimeout(tick, interval);
+        }
+    };
+
+    tick();
+    return function stop() { stopped = true; };
+}
+// 需要時停止監控：stopIsPlaying();
+
+
+// 回合按鈕案和顯示二態變換
+async function turnChange(turn) {
+    const btn = document.getElementById('end-turn');
+    const turnEl = document.getElementById('turn');
+
+
+    // 判斷目前狀態
+    if (turn === myTurn) {
+        await dbService.setField('rooms', roomID, 'currentTurn', myTurn);
+        btn.disabled = false;
+        btn.style.cursor = "pointer";
+        turnEl.textContent = "我的回合";
+        console.log("回合切換為：我方回合");
+
+    } else if (turn === enemyTurn) {
+
+        await dbService.setField('rooms', roomID, 'currentTurn', enemyTurn);
+        btn.disabled = true;
+        btn.style.cursor = "default";
+        turnEl.textContent = "敵方回合";
+        console.log("回合切換為：敵方回合")
+
+
+    } else {
+        console.log("二態變換錯誤");
+    }
+}
+
+
+// 結束回合
+// async function endTurn() {
+//     turnChange(enemyTurn);
+// }
+
+async function changeTurnToA() {
+    if (myTurn === "A") {
+        turnChange(myTurn);
+    }
+}
+async function changeTurnToB() {
+    if (myTurn === "B") {
+        turnChange(myTurn);
+    }
+}
+
+/**
+ * 以 dbService 監控 Firestore 的 currentTurn
+ * @param {string} roomID
+ * @param {object} opt { interval: 輪詢毫秒數, immediate: 第一次就依狀態觸發, onA: fn, onB: fn }
+ * @returns {function} stop() 可停止監控
+ */
+function watchCurrentTurn(roomID, opt = {}) {
+    const {
+        interval = 1000,
+        immediate = false,
+        onA = changeTurnToA,
+        onB = changeTurnToB
+    } = opt;
+
+    let firstCheck = true;
+    let stopped = false;
+    let lastVal;
+
+    const tick = async () => {
+        if (stopped) return;
+        try {
+            const raw = await dbService.getField('rooms', roomID, 'currentTurn');
+            const val = (raw === 'A' || raw === 'B') ? raw : null;
+
+            if (firstCheck) {
+                firstCheck = false;
+                lastVal = val;
+                if (immediate && val) (val === 'A' ? onA : onB)();
+            } else if (val !== lastVal) {
+                lastVal = val;
+                if (val === 'A') onA();
+                else if (val === 'B') onB();
+                // val 為 null/其他值時不觸發
+            }
+            console.log('[watchCurrentTurn] 偵測循環');
+        } catch (e) {
+            console.error('[watchCurrentTurn] 讀取失敗：', e);
+        } finally {
+            if (!stopped) setTimeout(tick, interval);
+        }
+    };
+
+    tick();
+    return function stop() { stopped = true; };
+}
 

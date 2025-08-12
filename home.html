@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
   <meta charset="UTF-8">
   <title>猜猜我是誰｜進入房間</title>
@@ -27,7 +28,7 @@
       padding: 20px;
       max-width: 500px;
       text-align: left;
-      box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+      box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
       margin-bottom: 30px;
       line-height: 1.5em;
       color: #4e3d2a;
@@ -69,6 +70,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <h1>猜猜我是誰 🎭</h1>
@@ -91,17 +93,34 @@
   </footer>
 
   <script>
+
     function joinRoom() {
-      const roomId = document.getElementById("roomInput").value.trim();
-      if (roomId === "") {
+      const roomID = document.getElementById("roomInput").value.trim();
+      if (roomID === "") {
         alert("請輸入房號！");
         return;
       }
+      (async () => {
+        try {
+          const mod = await import('./rtdb.js');
+          const { rtdbService /*, RtdbSeats*/ } = mod;
+          seatsDb = rtdbService.createSeats({ roomId: roomID });
 
-      // 假設跳轉到 room.html?room=xxxx
-      window.location.href = `room.html?room=${roomId}`;
+          if (await seatsDb.getPlayersCount() >= 2) {
+            alert("該房間已滿");
+          } else {
+            // 假設跳轉到 room.html?room=xxxx
+            window.location.href = `room.html?room=${roomID}`;
+          }
+        } catch (e) {
+          console.error('載入 db 模組失敗：', e);
+        }
+      })();
+
+
     }
   </script>
 
 </body>
+
 </html>
