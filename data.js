@@ -76,11 +76,13 @@ class Database {
             this.getField(path, id, 'targetB'),
             this.getField(path, id, 'isReadyA'),
             this.getField(path, id, 'isReadyB'),
+            this.getField(path, id, 'guessedA'),
+            this.getField(path, id, 'guessedB'),
             this.getField(path, id, 'currentTurn'),
             this.getField(path, id, 'guess'),
             this.getField(path, id, 'isPlaying')
         ]);
-        ['isOpened', 'targetA', 'targetB', 'isReadyA', 'isReadyB', 'currentTurn', 'guess', 'isPlaying'].forEach((key, i) => console.log(`${key}:`, fields[i]));
+        ['isOpened', 'targetA', 'targetB', 'isReadyA', 'isReadyB', 'guessedA', 'guessedB', 'currentTurn', 'guess', 'isPlaying'].forEach((key, i) => console.log(`${key}:`, fields[i]));
         console.groupEnd();
     }
 
@@ -88,11 +90,13 @@ class Database {
         const path = 'rooms';
         await Promise.all([
             this.setField(path, id, 'isOpened', true),
-            this.setField(path, id, 'currentTurn', 'A'),
+            this.setField(path, id, 'currentTurn', null),
             this.setField(path, id, 'targetA', 0),
             this.setField(path, id, 'targetB', 0),
             this.setField(path, id, 'isReadyA', false),
             this.setField(path, id, 'isReadyB', false),
+            this.setField(path, id, 'guessedA', false),
+            this.setField(path, id, 'guessedB', false),
             this.setField(path, id, 'guess', null),
             this.setField(path, id, 'isPlaying', false),
             // 這兩行會各自建立 24 個空字串

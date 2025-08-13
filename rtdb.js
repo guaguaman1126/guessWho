@@ -38,7 +38,7 @@ export class RtdbSeats {
      * @param {string} [options.uid]
      */
     constructor({ app: appArg, roomId } = {}) {
-    // constructor({ app: appArg, roomId, uid } = {}) {
+        // constructor({ app: appArg, roomId, uid } = {}) {
         // 保持「class 內容照舊」的精神：優先吃外部 app；沒給就用本模組初始化好的 app
         const theApp = appArg || app;
         if (!theApp) throw new Error('RtdbSeats: 必須提供 app（或讓模組先初始化成功）');
@@ -84,7 +84,12 @@ export class RtdbSeats {
         if (this.mySeat && seat !== 'auto' && seat !== this.mySeat) await this._releaseCurrentSeat();
         if (seat === 'A' || seat === 'B') return this._tryClaim(seat);
         const got = (await this._tryClaim('A')) || (await this._tryClaim('B'));
-        if (!got) console.warn(`[RtdbSeats] 房間已滿人：${this.basePath}（A、B 皆被佔用）`);
+        if (!got) {
+            console.warn(`[RtdbSeats] 房間已滿人：${this.basePath}（A、B 皆被佔用）`);
+            // alert("房間已滿");
+            // window.location.href = `home.html`;
+        }
+
         return got;
     }
 
