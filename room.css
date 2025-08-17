@@ -19,6 +19,21 @@ footer {
     flex-direction: column;
 }
 
+header button {
+
+    display: inline-block;
+    box-sizing: border-box;
+    /* width: 60%; */
+    padding: 4px 8px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    border: none;
+
+}
+
 #room-container1 {
     padding: 10px;
     display: flex;
@@ -130,7 +145,7 @@ main {
     z-index: 2;
 }
 
-.name-input{
+.name-input {
     display: inline-block;
     box-sizing: border-box;
     width: 60%;
@@ -142,6 +157,7 @@ main {
     border: none;
 
 }
+
 .name,
 #target-name {
     position: absolute;
@@ -238,4 +254,28 @@ main {
     background-position: center;
     background-size: cover;
     position: relative
+}
+
+/* 下載中 */
+/* 遮罩 */
+#loading-overlay {
+    position: fixed;
+    inset: 0;
+    /* top, right, bottom, left: 0 */
+    background: rgba(0, 0, 0, 0.4);
+    display: none;
+    /* 預設隱藏 */
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+/* 內容框 */
+#loading-box {
+    padding: 20px 30px;
+    border-radius: 10px;
+    background: #2b2b2b;
+    color: white;
+    font-size: 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
 }

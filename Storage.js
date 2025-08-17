@@ -54,6 +54,7 @@
             return url;
           } catch (err) {
             if (err?.code !== 'storage/object-not-found') throw err;
+            return null;
           }
         }
         throw new Error('fetchImage: 找不到圖片');
@@ -71,6 +72,10 @@
           await this._deleteFolder(sub);
         }
       }
+
+    
+    
+    
     }
 
     // 讓非模組腳本也能直接 new；並提供「ready Promise」避免競速問題

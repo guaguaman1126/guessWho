@@ -21,16 +21,18 @@
             <span id="room-id">房號：???</span>
             <button id="leave-room" onclick="leaveRoom()">離開房間</button>
 
-            <button onclick="changeState()">歸零房間</button>
+            <!-- <button onclick="changeState()">歸零房間</button> -->
+
 
             <button id="end-turn" onclick="turnChange(enemyTurn)">結束回合</button>
 
             <button onclick="updateAll()">刷新全部</button>
+            <button onclick="handleUpdateAll()">執行 updateALL()</button>
         </div>
 
         <div id="room-container2">
             <button id="room-state" onclick="toggleReady()">尚未準備</button>
-            <span id="turn">誰的回合</span>
+            <span id="turn">下載中</span>
         </div>
 
     </header>
@@ -855,6 +857,10 @@
             <button id="crop-btn">裁切並壓縮</button>
         </div>
 
+        <div id="loading-overlay">
+            <div id="loading-box">下載中...</div>
+        </div>
+
 
 
     </main>
@@ -868,7 +874,7 @@
 
     </footer>
     <!-- Storage -->
-     <script src="Storage.js" type="module"></script>
+    <script src="Storage.js" type="module"></script>
     <!-- database -->
     <script src="data.js" type="module"></script>
     <!-- JS -->

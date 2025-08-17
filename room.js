@@ -69,8 +69,8 @@ async function initializing() {
 
         const stopIsPlaying = watchIsPlaying(roomID, { interval: 1000, immediate: false });
         const stopWatchTurn = watchCurrentTurn(roomID, { immediate: true });
-
-        updateAll();
+        // updateAll();
+        handleUpdateAll();
     } catch (e) {
         console.error('載入 db 模組失敗：', e);
     }
@@ -91,9 +91,9 @@ async function updateName(dataIndex, name, nameContainer) {
     await dbService.setField('rooms', roomID, 'imageNames', value, idx);
     console.log(`資料庫imageNames[${idx}] 已更新為: ${value}`);
 
-    // nameContainer.textContent = await dbService.getField('rooms', roomID, 'imageNames', idx)
-    // console.log(`本地端imageNames[${idx}] 已更新為: ${value}`);
-    updateAll();
+    nameContainer.textContent = await dbService.getField('rooms', roomID, 'imageNames', idx)
+    console.log(`本地端imageNames[${idx}] 已更新為: ${value}`);
+    // updateAll();
 
 
 }
@@ -142,37 +142,32 @@ async function updateAll() {
 
 
         // 圖片：一律使用 background-image
-        // const urlRemote = await storageService.fetchImage(index);
-        // const imgEl = cardItem.querySelector('.card-img');
-        // if (imgEl && urlRemote) {
-        //   const bg = imgEl.style.backgroundImage || '';
-        //   const urlLocal = bg.replace(/^url\((['"]?)(.*)\1\)$/,'$2');
-        //   if (urlRemote !== urlLocal) imgEl.style.backgroundImage = `url("${urlRemote}")`;
-        // }
         try {
-            const urlRemote = await storageService.fetchImage(index);
+            let urlRemote = await storageService.fetchImage(index);
+
+            // 如果拿到null，就用預設圖
+            if (urlRemote === null) {
+                urlRemote = 'sources/photo.png';
+
+            }
 
             const imgEl = cardItem.querySelector('.card-img');
             if (!imgEl || !urlRemote) return;
 
-            // 取 inline 背景，去掉空白
             const bg = (imgEl.style.backgroundImage || '').trim();
-
-            // 把 url("...") 剝出來；沒匹配就給空字串
             const m = /^url\((['"]?)(.*?)\1\)$/.exec(bg);
             const urlLocal = m ? m[2] : '';
 
-            // 比對時只比「路徑」，忽略可能變動的 query/token，避免誤判
             let same = false;
             if (urlLocal) {
                 const a = new URL(urlRemote, location.href);
-                const b = new URL(urlLocal, location.href); // 相對位址也能解
+                const b = new URL(urlLocal, location.href);
                 same = a.pathname === b.pathname;
             }
 
             if (!same) {
                 imgEl.style.backgroundImage = `url("${urlRemote}")`;
-                console.log(`更新第${index}張卡片的圖片`)
+                console.log(`更新第${index}張卡片的圖片`);
             }
         } catch (err) {
             // fetchImage 找不到或權限錯誤都會來這
@@ -466,24 +461,31 @@ document.getElementById('crop-btn').addEventListener('click', function (e) {
     const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
 
     canvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        currentCardImgContainer.style.backgroundImage = `url(${url})`;
-        document.getElementById('crop-container').style.display = 'none';
-
         (async () => {
+            const url = URL.createObjectURL(blob);
+            currentCardImgContainer.style.backgroundImage = `url(${url})`;
+            document.getElementById('crop-container').style.display = 'none';
+
+            // (async () => {
             try {
                 await storageService.uploadImage(imgIndex, blob);
-                console.log('✅ 裁切後已上傳', { path, downloadUrl });
+                console.log('✅ 裁切後已上傳');
+
             } catch (err) {
                 console.error('❌ 上傳裁切圖失敗', err);
             }
-        })();
+            console.log(`${currentCardImgContainer.style.backgroundImage}`);
+            currentCardImgContainer.style.backgroundImage = `url(${await storageService.fetchImage(imgIndex)})`;
+            // })();
 
-        cropper.destroy();
-        imgIndex = 0;
-        cropper = null;
-        currentCardImgContainer = null;
+            cropper.destroy();
+            imgIndex = 0;
+            cropper = null;
+            currentCardImgContainer = null;
+        })();
     }, 'image/jpeg', 0.7);
+
+
 });
 
 
@@ -514,7 +516,7 @@ editors.forEach(container => {
         container.style.display = 'inline-block';
         input.style.display = 'none';
 
-        // nameContainer.textContent = input.value;//這裡要改
+        nameContainer.textContent = input.value;//這裡要改
         updateName(dataIndex, input.value, nameContainer);
 
         container.querySelector('span').textContent = '更改姓名';
@@ -589,6 +591,7 @@ async function stateChange(state) {
 async function changeState() {
 
     await dbService.setRoom(roomID);
+    await StorageService.cleanRoom();
 
 }
 
@@ -805,3 +808,21 @@ function watchCurrentTurn(roomID, opt = {}) {
     return function stop() { stopped = true; };
 }
 
+// 下載中
+
+function showLoading() {
+    document.getElementById("loading-overlay").style.display = "flex";
+}
+
+function hideLoading() {
+    document.getElementById("loading-overlay").style.display = "none";
+}
+
+async function handleUpdateAll() {
+    try {
+        showLoading();
+        await updateAll();
+    } finally {
+        hideLoading();
+    }
+}
