@@ -83,3 +83,9 @@
     window.__storageServiceReady = Promise.resolve(StorageService);
     // （可選）也可以發事件供 listen：
     window.dispatchEvent(new Event('storage-service-ready'));
+
+
+
+
+
+   

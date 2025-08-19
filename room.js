@@ -198,22 +198,10 @@ async function updateAll() {
     } else {
         turnChange(enemyTurn);
     }
-}
-
-
-// 檢查所有條件
-function check() {
+    // 更新myGuessed
+    // myGuessed = false;
 
 }
-
-
-
-
-
-
-
-
-
 
 // 離開房間
 function leaveRoom() {
@@ -243,6 +231,7 @@ async function cardImg(e) {
         imgName.style.display = 'flex';
 
         hidecurrentInterface(e, '.card-img-name');
+        RWDupdateCard(e, '.card-img-name-img', '.card-img-name-name');
     } else {
 
         const gusesFold = parentCard.querySelector('.card-guess-fold');
@@ -251,6 +240,7 @@ async function cardImg(e) {
         gusesFold.style.display = 'flex';
 
         hidecurrentInterface(e, '.card-guess-fold');
+        RWDupdateCard(e, '.card-guess-fold-img', '.card-guess-fold-name');
     }
 
 
@@ -341,14 +331,13 @@ function edit(e) {
 //蓋牌
 function fold(e) {
     e.stopPropagation();
-    const target = e.target;
-    const parentElement = target.parentElement;
-    const parentCard = target.closest('.card-item');
+    const parentCard = e.target.closest('.card-item');
+    const CardGuessFold = parentCard.querySelector('.card-guess-fold');
     const folded = parentCard.querySelector('.card-folded');
-    const img = parentCard.querySelector('.card-img');
+    // const img = parentCard.querySelector('.card-img');
 
     // img.style.display = "none";
-    parentElement.style.display = "none";
+    CardGuessFold.style.display = "none";
     folded.style.display = "flex";
     console.log("蓋上圖片");
 }
@@ -722,7 +711,7 @@ async function turnChange(turn) {
         btn.style.cursor = "pointer";
         turnEl.textContent = "我的回合";
         console.log("回合切換為：我方回合");
-        guessed = false;
+        await dbService.setField('rooms', roomID, myGuessed, false);
 
     } else if (turn === enemyTurn) {
 
@@ -820,9 +809,66 @@ function hideLoading() {
 
 async function handleUpdateAll() {
     try {
-        showLoading();
+        // showLoading();//標記
         await updateAll();
     } finally {
-        hideLoading();
+        // hideLoading();
     }
 }
+
+
+// 手機排版
+document.addEventListener('DOMContentLoaded', () => {
+    // 先檢查一次
+    if (window.innerWidth < 600) {
+
+
+
+        // document.querySelectorAll('.card-img-name').forEach(el => {
+        //   // 確保不會一直重複加
+        //   if (!el.querySelector('img')) {
+        //     const img = document.createElement('img');
+        //     img.alt = ''; // 空的就好
+        //     el.appendChild(img);
+        //   }
+        // });
+    }
+})
+
+function RWDImgDisappear(e, currentInterfaceClass) {
+    e.stopPropagation();
+    const currentInterface = e.target.closest(currentInterfaceClass);
+    const parentCard = currentInterface.closest('.card-item');
+    const img = parentCard.querySelector('.card-img');
+
+
+    currentInterface.style.display = 'none';
+    img.style.display = 'flex';
+}
+
+// 改資訊介面的顯示圖片更新
+function RWDupdateCard(e, imgPastedClass, namePastedClass) {
+    // 找到父層 .card-Item
+    const parent = e.target.closest('.card-item');
+    if (!parent) return;
+    // 複製來源
+    const imgCopied = parent.querySelector('.card-img');
+    const nameCopied = parent.querySelector('.name');
+
+    // 貼上目標
+    const imgPasted = parent.querySelector(imgPastedClass);
+    const namePasted = parent.querySelector(namePastedClass);
+    console.log(imgPasted.style.backgroundImage);
+
+    if (imgCopied && imgPasted) {
+        imgPasted.style.backgroundImage = imgCopied.style.backgroundImage || '';
+
+    }
+
+    if (nameCopied && namePasted) {
+        // 文字內容是 innerText / textContent，不是 .context
+        namePasted.textContent = nameCopied.textContent || '';
+
+    }
+}
+
