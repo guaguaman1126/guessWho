@@ -383,10 +383,12 @@ async function guess(e) {
 
 // 保留圖片重整房間
 async function resetRoom() {
-
+    await dbService.setField('rooms', roomID, 'winner', null);
     turnChange(null);
     await dbService.setField('rooms', roomID, 'targetA', 0);
     await dbService.setField('rooms', roomID, 'targetB', 0);
+    await dbService.setField('rooms', roomID, 'guessedA', false);
+    await dbService.setField('rooms', roomID, 'guessedB', false);
     updateTarget();
     stateChange('尚未準備');
 
@@ -553,12 +555,14 @@ async function stateChange(state) {
         await dbService.setField('rooms', roomID, isReady, false);
         btn.disabled = false;
         btn.style.cursor = "pointer";
-        btn.style.backgroundColor = "#4CAF50";
+        btn.style.backgroundColor = "#0DAFBA";
+        btn.style.color = "#ffffffff";
 
     } else if (state === '已準備') {
 
         btn.textContent = '已準備';
-        btn.style.backgroundColor = "#2f6a31ff";
+        btn.style.backgroundColor = "#2a7278ff";
+        btn.style.color = "#ffffffff";
         await dbService.setField('rooms', roomID, isReady, true);
         // btn.disabled = false;
         // btn.style.cursor = "pointer"
@@ -569,7 +573,8 @@ async function stateChange(state) {
         btn.textContent = "遊戲開始";
         btn.disabled = true;
         btn.style.cursor = "default";
-        btn.style.backgroundColor = "#959593ff";
+        btn.style.backgroundColor = "#F2E6ED";
+        btn.style.color = "#120B0F";
         // await dbService.setField('rooms', roomID, 'isPlaying', true);
         console.log('雙方都準備，isPlaying改true');
 
@@ -666,7 +671,7 @@ async function onGameStop() {
     } else {
         alert("你輸了");
     }
-    await dbService.setField('rooms', roomID, 'winner', null);
+    // await dbService.setField('rooms', roomID, 'winner', null);
     resetRoom();
 
     console.log('[isPlaying] → false，收工');  /* stopGame() */
@@ -722,7 +727,7 @@ async function turnChange(turn) {
         await dbService.setField('rooms', roomID, 'currentTurn', myTurn);
         btn.disabled = false;
         btn.style.cursor = "pointer";
-        btn.style.backgroundColor = "  #4CAF50";
+        btn.style.backgroundColor = "  #0DAFBA";
         turnEl.textContent = "：我的回合";
         console.log("回合切換為：我方回合");
         // await dbService.setField('rooms', roomID, myGuessed, false);
@@ -732,7 +737,7 @@ async function turnChange(turn) {
         await dbService.setField('rooms', roomID, 'currentTurn', enemyTurn);
         btn.disabled = true;
         btn.style.cursor = "default";
-        btn.style.backgroundColor = "#2f6a31ff";
+        btn.style.backgroundColor = "#2a7278ff";
         turnEl.textContent = "：敵方回合";
         console.log("回合切換為：敵方回合")
         await dbService.setField('rooms', roomID, myGuessed, false);
@@ -742,7 +747,7 @@ async function turnChange(turn) {
         await dbService.setField('rooms', roomID, 'currentTurn', null);
         btn.disabled = true;
         btn.style.cursor = "default";
-        btn.style.backgroundColor = "#2f6a31ff";
+        btn.style.backgroundColor = "#2a7278ff";
         turnEl.textContent = "：選擇目標按下準備";
         console.log("回合切換為：null")
     } else {

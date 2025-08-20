@@ -22,12 +22,11 @@
             <button id="leave-room" onclick="leaveRoom()">離開房間</button>
 
             <!-- <button onclick="changeState()">歸零房間</button> -->
-
+             
+            <button onclick="handleUpdateAll()">刷新全部</button>
 
             <button id="end-turn" onclick="turnChange(enemyTurn)">結束回合</button>
 
-            <!-- <button onclick="updateAll()">刷新全部</button> -->
-            <button onclick="handleUpdateAll()">刷新全部</button>
         </div>
 
         <div id="room-container2">
@@ -1090,7 +1089,7 @@
 
     </main>
     <footer>
-        <button id="show-target-btn"   onclick="showMyTarget()">顯示我的目標</button>
+        <button id="show-target-btn" onclick="showMyTarget()">顯示我的目標</button>
         <div id="target-overlay" hidden>
             <div id="target-img">
                 <div id="target-name">55</div>
