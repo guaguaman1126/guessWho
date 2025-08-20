@@ -825,10 +825,10 @@ function hideLoading() {
 
 async function handleUpdateAll() {
     try {
-        // showLoading();//標記
+        showLoading();
         await updateAll();
     } finally {
-        // hideLoading();
+        hideLoading();
     }
 }
 

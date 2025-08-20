@@ -3,21 +3,25 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>猜猜我是誰｜進入房間</title>
+  <title>Tea Master Supreme｜進入房間</title>
   <style>
+    html {
+      font-size: 16px; /* 基準字體大小 */
+    }
+
     body {
       background: linear-gradient(to bottom right, #f9eec0, #ffe8cc);
       font-family: "Segoe UI", sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 40px;
+      padding: 2.5rem;
       min-height: 100vh;
     }
 
     h1 {
-      font-size: 2.2em;
-      margin-bottom: 0.5em;
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
       color: #5a3e1b;
     }
 
@@ -25,62 +29,115 @@
       background-color: #fff7d6;
       border: 1px solid #e7c888;
       border-radius: 12px;
-      padding: 20px;
-      max-width: 500px;
+      padding: 1.25rem;
       text-align: left;
       box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
-      margin-bottom: 30px;
-      line-height: 1.5em;
+      margin-bottom: 1.8rem;
+      line-height: 1.7;
       color: #4e3d2a;
+      font-size: 1.125rem; /* 18px */
     }
+
+    .rules h2 { margin: 0 0 0.5rem; font-size: 1.5rem; color: #5a3e1b; }
+    .rules h3 { margin: 0.875rem 0 0.5rem; font-size: 1.25rem; }
+    .rules h4 { margin: 0.625rem 0 0.5rem; font-size: 1.125rem; }
+    .rules ul { padding-left: 1.25rem; margin: 0.375rem 0 0.625rem; }
 
     .input-group {
       display: flex;
-      gap: 10px;
+      gap: 0.625rem;
       align-items: center;
     }
 
     input[type="text"] {
-      padding: 10px;
+      padding: 0.625rem;
       border: 1px solid #cfa75d;
       border-radius: 8px;
-      font-size: 1em;
-      width: 180px;
+      font-size: 1rem;
+      width: 11.25rem;
     }
 
     button {
-      padding: 10px 18px;
+      padding: 0.625rem 1.125rem;
       background-color: #f5b942;
       color: white;
       border: none;
       border-radius: 8px;
-      font-size: 1em;
+      font-size: 1rem;
       cursor: pointer;
       transition: background-color 0.2s ease;
     }
 
-    button:hover {
-      background-color: #d4972f;
-    }
+    button:hover { background-color: #d4972f; }
 
     footer {
       margin-top: auto;
-      font-size: 0.9em;
+      font-size: 0.875rem;
       color: #888;
+    }
+
+    /* RWD 手機版，標題特大且其他字體跟著調整 */
+    @media (max-width: 600px) {
+      html { font-size: 16px; } /* 同桌機保持一致基準 */
+
+      h1 {
+        font-size: 4rem; /* 64px */
+        line-height: 1.1;
+        text-align: center;
+      }
+
+      .rules {
+        padding: 1.125rem;
+        border-radius: 12px;
+        line-height: 1.8;
+        font-size: 1.25rem; /* 20px */
+      }
+      .rules h2 { font-size: 1.75rem; } /* 28px */
+      .rules h3 { font-size: 1.5rem; } /* 24px */
+      .rules h4 { font-size: 1.25rem; } /* 20px */
+
+      .input-group { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+      input[type="text"], button { width: 100%; font-size: 1.125rem; }
+
+      footer { font-size: 1rem; }
     }
   </style>
 </head>
 
 <body>
 
-  <h1>猜猜我是誰 🎭</h1>
+  <h1>Tea Master Supreme☕💅</h1>
 
   <div class="rules">
-    <strong>遊戲規則：</strong><br>
-    1. 每位玩家會看到一排角色圖片，並選擇一張作為自己的角色。<br>
-    2. 輪流提問「這個人戴眼鏡嗎？」「這個人是女生嗎？」等問題，對方只能回答「是」或「不是」。<br>
-    3. 根據回答排除角色，直到成功猜出對方的角色為止！<br>
-    4. 自己可以上傳照片創建新房間，也可以輸入房號加入別人的遊戲。<br>
+
+    <h3>(1) 遊戲前設定</h3>
+    <p>歡迎來到 <strong>Drama Central</strong> ✨</p>
+    <p>遊戲開始前，先幫我們的 <strong>24位小寶貝們</strong>上傳美照＆取名。</p>
+    <p>從中選出一位，作為你今天的 <strong>秘密小寶貝</strong> 💎。藏好喔，這可是你贏的關鍵！</p>
+
+    <h3>(2) 回合制開撕</h3>
+    <p>每回合只能選以下 <strong>一種方式行動</strong>，用你的嘴或直覺 Slay 全場：</p>
+
+    <h4>A. 提問</h4>
+    <p>提問越尖銳越有趣，<strong>Gossip Girl</strong> 的皇冠就是你的 👑。</p>
+    <ul>
+      <li>「這個人戴眼鏡嗎？」 🙅‍♀️</li>
+      <li>「這個人是女生嗎？」 🙅‍♀️</li>
+      <li><strong>「這個人是不是超婊？」</strong> 🙆‍♀️</li>
+      <li><strong>「這個人嘴巴是不是超臭？」</strong> 🙆‍♀️</li>
+    </ul>
+    <p>對方只能回答：</p>
+    <ul>
+      <li><strong>是</strong> ✅</li>
+      <li><strong>不是</strong> ❌</li>
+      <li><strong>依情況給予提示</strong> ✨</li>
+    </ul>
+
+    <h4>B. 猜測對方的秘密小寶貝</h4>
+    <p>猜測對方的<strong>秘密小寶貝</strong>，每回合只能猜一次。</p>
+
+    <h3>(3) 蓋牌結束回合</h3>
+    <p>提問或猜測完後使用蓋牌刪掉沒有嫌疑的小寶貝 🔥，最後記得<strong>按下右上角的回合結束</strong>切換回合!!</p>
   </div>
 
   <div class="input-group">
@@ -89,11 +146,10 @@
   </div>
 
   <footer>
-    © 2025 Guess Who Online Edition
+    © 2025 Tea Master Supreme Edition
   </footer>
 
   <script>
-
     function joinRoom() {
       const roomID = document.getElementById("roomInput").value.trim();
       if (roomID === "") {
@@ -116,8 +172,6 @@
           console.error('載入 db 模組失敗：', e);
         }
       })();
-
-
     }
   </script>
 
