@@ -2,6 +2,7 @@
 let dbService;
 let seatsDb;
 let storageService;
+let myseat;
 let roomID;
 let myTarget;
 let enemyTarget;
@@ -40,6 +41,7 @@ async function initializing() {
 
         const seat = await seatsDb.getSeat();
         if (seat === 'A') {
+            myseat = 'A';
             myTarget = 'targetA';
             enemyTarget = 'targetB';
             isReady = "isReadyA";
@@ -50,6 +52,7 @@ async function initializing() {
             enemyGuessed = "guessedB";
 
         } else if (seat === 'B') {
+            myseat = 'B';
             myTarget = 'targetB';
             enemyTarget = 'targetA';
             isReady = "isReadyB";
@@ -147,7 +150,7 @@ async function updateAll() {
 
             // 如果拿到null，就用預設圖
             if (urlRemote === null) {
-                urlRemote = 'sources/photo.png';
+                urlRemote = 'sources/photo.webp';
 
             }
 
@@ -162,16 +165,18 @@ async function updateAll() {
             if (urlLocal) {
                 const a = new URL(urlRemote, location.href);
                 const b = new URL(urlLocal, location.href);
-                same = a.pathname === b.pathname;
+                same = a === b;
             }
 
             if (!same) {
                 imgEl.style.backgroundImage = `url("${urlRemote}")`;
                 console.log(`更新第${index}張卡片的圖片`);
+            } else {
+                console.log(`第${index}張卡片的圖片不用變更`);
             }
         } catch (err) {
             // fetchImage 找不到或權限錯誤都會來這
-            // console.warn('fetchImage 失敗：', err);
+            // console.warn('fetchImage 失敗：', index, err);
         }
 
     }
@@ -358,8 +363,10 @@ async function guess(e) {
         const enemyGuess = await dbService.getField('rooms', roomID, enemyTarget);
         await dbService.setField('rooms', roomID, myGuessed, true);
         if (guess === enemyGuess) {
-            alert("你贏了");
-            resetRoom();
+            // alert("你贏了");
+            // resetRoom();
+            await dbService.setField('rooms', roomID, 'isPlaying', false);
+            await dbService.setField('rooms', roomID, 'winner', myseat);
 
         } else {
             alert("猜錯了");
@@ -376,20 +383,15 @@ async function guess(e) {
 
 // 保留圖片重整房間
 async function resetRoom() {
-    // dbService.setField('room', roomID, 'isOpened', true);
-    // dbService.setField('room', roomID, 'currentTurn', null);
-    // dbService.setField('room', roomID, 'isReadyA', false);
-    // dbService.setField('room', roomID, 'isReadyB', false);
-    // dbService.setField('room', roomID, 'guess', null);
 
     turnChange(null);
     await dbService.setField('rooms', roomID, 'targetA', 0);
     await dbService.setField('rooms', roomID, 'targetB', 0);
     updateTarget();
     stateChange('尚未準備');
-    await dbService.setField('rooms', roomID, 'isPlaying', false);
+
     await dbService.show('rooms', roomID);
-    console.log("檢查重設房間")
+    console.log("檢查重設房間");
 }
 
 
@@ -455,7 +457,7 @@ document.getElementById('crop-btn').addEventListener('click', function (e) {
             currentCardImgContainer.style.backgroundImage = `url(${url})`;
             document.getElementById('crop-container').style.display = 'none';
 
-            // (async () => {
+
             try {
                 await storageService.uploadImage(imgIndex, blob);
                 console.log('✅ 裁切後已上傳');
@@ -465,7 +467,7 @@ document.getElementById('crop-btn').addEventListener('click', function (e) {
             }
             console.log(`${currentCardImgContainer.style.backgroundImage}`);
             currentCardImgContainer.style.backgroundImage = `url(${await storageService.fetchImage(imgIndex)})`;
-            // })();
+
 
             cropper.destroy();
             imgIndex = 0;
@@ -550,11 +552,13 @@ async function stateChange(state) {
         btn.textContent = '尚未準備';
         await dbService.setField('rooms', roomID, isReady, false);
         btn.disabled = false;
-        btn.style.cursor = "pointer"
+        btn.style.cursor = "pointer";
+        btn.style.backgroundColor = "#4CAF50";
 
     } else if (state === '已準備') {
 
         btn.textContent = '已準備';
+        btn.style.backgroundColor = "#2f6a31ff";
         await dbService.setField('rooms', roomID, isReady, true);
         // btn.disabled = false;
         // btn.style.cursor = "pointer"
@@ -565,6 +569,7 @@ async function stateChange(state) {
         btn.textContent = "遊戲開始";
         btn.disabled = true;
         btn.style.cursor = "default";
+        btn.style.backgroundColor = "#959593ff";
         // await dbService.setField('rooms', roomID, 'isPlaying', true);
         console.log('雙方都準備，isPlaying改true');
 
@@ -576,7 +581,7 @@ async function stateChange(state) {
 
 
 
-// 重整房間
+// 重整房間 壞掉
 async function changeState() {
 
     await dbService.setRoom(roomID);
@@ -588,6 +593,7 @@ async function changeState() {
 // 點擊顯示我的目標
 const overlay = document.getElementById('target-overlay');
 function showMyTarget() {
+    updateTarget();
     overlay.hidden = false; document.body.style.overflow = 'hidden';
 }
 function hideTarget() {
@@ -626,7 +632,7 @@ async function updateTarget() {
     // 取得卡片的 data-index
     const index = await dbService.getField('rooms', roomID, myTarget);
     if (index === 0) {
-        // targetImgEl.style.backgroundImage = imgUrl ? `url(${imgUrl})` : '';
+        targetImgEl.style.backgroundImage = 'url("sources/photo.webp")';
         targetNameEl.textContent = '請選擇目標';
         return
     }
@@ -653,9 +659,16 @@ async function onGameStart() {
     console.log('[isPlaying] → true，開打！'); /* startGame() */
 
 }
-function onGameStop() {
-    stateChange('尚未準備');
-    turnChange(null);
+async function onGameStop() {
+
+    if (await dbService.getField('rooms', roomID, 'winner') == myseat) {
+        alert("你贏了");
+    } else {
+        alert("你輸了");
+    }
+    await dbService.setField('rooms', roomID, 'winner', null);
+    resetRoom();
+
     console.log('[isPlaying] → false，收工');  /* stopGame() */
 }
 
@@ -709,25 +722,28 @@ async function turnChange(turn) {
         await dbService.setField('rooms', roomID, 'currentTurn', myTurn);
         btn.disabled = false;
         btn.style.cursor = "pointer";
-        turnEl.textContent = "我的回合";
+        btn.style.backgroundColor = "  #4CAF50";
+        turnEl.textContent = "：我的回合";
         console.log("回合切換為：我方回合");
-        await dbService.setField('rooms', roomID, myGuessed, false);
+        // await dbService.setField('rooms', roomID, myGuessed, false);
 
     } else if (turn === enemyTurn) {
 
         await dbService.setField('rooms', roomID, 'currentTurn', enemyTurn);
         btn.disabled = true;
         btn.style.cursor = "default";
-        turnEl.textContent = "敵方回合";
+        btn.style.backgroundColor = "#2f6a31ff";
+        turnEl.textContent = "：敵方回合";
         console.log("回合切換為：敵方回合")
-
+        await dbService.setField('rooms', roomID, myGuessed, false);
 
     } else if (turn === null) {
 
         await dbService.setField('rooms', roomID, 'currentTurn', null);
         btn.disabled = true;
         btn.style.cursor = "default";
-        turnEl.textContent = "選擇目標按下準備";
+        btn.style.backgroundColor = "#2f6a31ff";
+        turnEl.textContent = "：選擇目標按下準備";
         console.log("回合切換為：null")
     } else {
         console.log("三態變換錯誤");

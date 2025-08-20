@@ -79,10 +79,10 @@ class Database {
             this.getField(path, id, 'guessedA'),
             this.getField(path, id, 'guessedB'),
             this.getField(path, id, 'currentTurn'),
-            this.getField(path, id, 'guess'),
+            this.getField(path, id, 'winner'),
             this.getField(path, id, 'isPlaying')
         ]);
-        ['isOpened', 'targetA', 'targetB', 'isReadyA', 'isReadyB', 'guessedA', 'guessedB', 'currentTurn', 'guess', 'isPlaying'].forEach((key, i) => console.log(`${key}:`, fields[i]));
+        ['isOpened', 'targetA', 'targetB', 'isReadyA', 'isReadyB', 'guessedA', 'guessedB', 'currentTurn', 'winner', 'isPlaying'].forEach((key, i) => console.log(`${key}:`, fields[i]));
         console.groupEnd();
     }
 
@@ -97,7 +97,7 @@ class Database {
             this.setField(path, id, 'isReadyB', false),
             this.setField(path, id, 'guessedA', false),
             this.setField(path, id, 'guessedB', false),
-            this.setField(path, id, 'guess', null),
+            this.setField(path, id, 'winner', null),
             this.setField(path, id, 'isPlaying', false),
             // 這兩行會各自建立 24 個空字串
             this.setField(path, id, 'imageNames', Array(24).fill('王大明')),

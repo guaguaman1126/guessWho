@@ -11,6 +11,15 @@ header {
     justify-content: space-between;
 }
 
+/* 所有按鈕點擊特效 */
+button {
+    transition: background-color 0.2s ease;
+}
+
+button:active {
+    background-color: #2f6a31ff;
+}
+
 /* footer */
 footer {
     height: auto;
@@ -102,7 +111,21 @@ main {
     border-radius: 4px;
     font-size: 14px;
     border: none;
+
 }
+
+.chose-target{
+    transition: background-color 0.2s ease;
+}
+
+.chose-target:active {
+    background-color: #2f6a31ff;
+
+}
+
+
+
+
 
 
 .card-img,
@@ -127,7 +150,7 @@ main {
 .card-img {
     background-color: aliceblue;
     display: flex;
-    background-image: url("sources/photo.png");
+    background-image: url("sources/photo.webp");
     background-position: center;
     background-size: cover;
 
@@ -138,6 +161,7 @@ main {
     background-image: url("sources/folded.png");
     background-position: center;
     background-size: cover;
+
 }
 
 
@@ -250,7 +274,7 @@ main {
     height: 25vh;
     border: 2px solid #000000;
     border-radius: 8px;
-    background-image: url("sources/photo.png");
+    background-image: url("sources/photo.webp");
     background-position: center;
     background-size: cover;
     position: relative
@@ -280,6 +304,37 @@ main {
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
 }
 
+/* turn文字說明框 */
+#turn {
+    display: inline-block;
+    box-sizing: border-box;
+    padding: 4px 8px 4px 0;
+    /* background-color: #2b2b2b; */
+    color: rgb(0, 0, 0);
+    border-radius: 4px;
+    font-size: 14px;
+    border: none;
+}
+
+/* 顯示我的目標按鈕 */
+#show-target-btn {
+    display: inline-block;
+    box-sizing: border-box;
+    padding: 4px 8px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    border: none;
+
+    transition: background-color 0.2s ease;
+}
+
+#show-target-btn:active {
+    background-color: #2f6a31ff;
+
+}
 
 
 /* RWD */
@@ -352,7 +407,7 @@ main {
         height: 25vh;
         border: 2px solid #000000;
         border-radius: 8px;
-        background-image: url("sources/photo.png");
+        background-image: url("sources/photo.webp");
         background-position: center;
         background-size: cover;
     }
