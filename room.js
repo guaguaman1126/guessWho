@@ -137,7 +137,7 @@ async function updateAll() {
             const nameLocal = (nameEl.textContent ?? '').trim();
             if (nameRemote !== nameLocal) {
                 nameEl.textContent = nameRemote;
-                // inputEl.value = nameRemote;
+                inputEl.value = nameRemote;
                 console.log(`更新第${index}張卡片的名字為${nameEl.textContent}`);
             }
 
@@ -373,7 +373,7 @@ async function guess(e) {
             // turnChange(enemyTurn);
         }
     } else {
-        alert("現在是敵方回合不能猜目標");
+        alert("現在是敵方回合不能猜測");
         console.log("不能猜目標");
     }
 
@@ -530,7 +530,7 @@ editors.forEach(container => {
 async function toggleReady() {
     const btn = document.getElementById('room-state');
     if (await dbService.getField('rooms', roomID, myTarget) === 0) {
-        alert("請先選目標");
+        alert("請先選您的秘密小寶貝");
         return;
     }
     // 判斷目前狀態
@@ -638,7 +638,7 @@ async function updateTarget() {
     const index = await dbService.getField('rooms', roomID, myTarget);
     if (index === 0) {
         targetImgEl.style.backgroundImage = 'url("sources/photo.webp")';
-        targetNameEl.textContent = '請選擇目標';
+        targetNameEl.textContent = '請選擇您的秘密小寶貝';
         return
     }
 
@@ -658,7 +658,7 @@ async function updateTarget() {
 async function onGameStart() {
     stateChange('遊戲開始');
     const randomturn = Math.random() < 0.5 ? 'A' : 'B';
-    turnChange(randomturn);
+    turnChange(randomturn);//mark
 
     updateAll();//確保圖檔都有下載到本地
     console.log('[isPlaying] → true，開打！'); /* startGame() */
@@ -748,7 +748,7 @@ async function turnChange(turn) {
         btn.disabled = true;
         btn.style.cursor = "default";
         btn.style.backgroundColor = "#2a7278ff";
-        turnEl.textContent = "：選擇目標按下準備";
+        turnEl.textContent = "：請選擇秘密小寶貝並按下準備";
         console.log("回合切換為：null")
     } else {
         console.log("三態變換錯誤");
