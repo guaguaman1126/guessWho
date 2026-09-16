@@ -1,0 +1,37 @@
+@import "tailwindcss";
+@theme inline {
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-orange: var(--orange);
+  --color-mustard: var(--mustard);
+  --color-sage: var(--sage);
+  --color-danger: var(--danger);
+}
+:root {
+  --paper: #f4e8d1; --card: #fff3e0; --ink: #3e2723; --orange: #d35400;
+  --mustard: #f1c40f; --sage: #7a8b5a; --shadow: #795548; --danger: #a63d2f;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: Georgia, "Noto Serif TC", "PMingLiU", serif; }
+body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 60; opacity: .035; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23000' filter='url(%23n)' opacity='.7' d='M0 0h180v180H0z'/%3E%3C/svg%3E"); }
+.display-font { font-family: "Cooper Black", Georgia, "Noto Serif TC", "PMingLiU", serif; font-weight: 900; }
+button, a, input, select { touch-action: manipulation; }
+button, a, input, select, summary { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 3px solid var(--orange); outline-offset: 4px; }
+img { user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none; }
+input:not([type="range"]):not([type="checkbox"]), select { min-height: 44px; border: 1px solid #79554880; border-radius: 8px; padding: 10px 12px; background: var(--card); max-width: 100%; }
+dialog { overscroll-behavior: contain; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+.board-stage { container-type: size; }
+.game-board { width: min(100cqw, 100cqh, 720px); aspect-ratio: 1; gap: clamp(3px, 1cqw, 10px); }
+.room-shell { height: 100dvh; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+.room-shell[data-active="true"] { touch-action: none; overflow: hidden; overscroll-behavior: none; }
+.card-image { width: min(80dvw, 47dvh, 420px); aspect-ratio: 1; touch-action: none; }
+.card-fold { background: repeating-linear-gradient(45deg, #79554812, #79554812 4px, transparent 4px, transparent 10px), var(--paper); }
+@media (max-height: 620px) {
+  .room-shell .room-subtitle { display: none; }
+  .room-shell .room-heading { padding-block: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

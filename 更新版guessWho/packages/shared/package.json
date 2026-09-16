@@ -1,0 +1,13 @@
+{
+  "name": "@guesswho/shared",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./game-types": "./game-types.ts",
+    "./socket-events": "./socket-events.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

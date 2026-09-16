@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 遊戲狀態與秘密只允許 Game Server 的 Admin SDK 存取。
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

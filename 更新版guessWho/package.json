@@ -1,0 +1,29 @@
+{
+  "name": "guesswho-remake",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace @guesswho/web",
+    "dev:server": "npm run dev --workspace @guesswho/game-server",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspace @guesswho/game-server",
+    "test:rules": "firebase emulators:exec --only firestore,storage \"tsx --test firebase/rules.test.ts\"",
+    "emulators": "firebase emulators:start --only auth,firestore,storage",
+    "start": "npm run start --workspace @guesswho/web",
+    "start:server": "npm run start --workspace @guesswho/game-server"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "@types/node": "^24.0.0",
+    "firebase-tools": "^15.30.1",
+    "typescript": "^5.9.3"
+  }
+}
