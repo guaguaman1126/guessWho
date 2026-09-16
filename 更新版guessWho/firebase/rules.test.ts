@@ -15,6 +15,7 @@ before(async () => {
   });
   await environment.withSecurityRulesDisabled(async context => {
     await setDoc(doc(context.firestore(), "rooms/ABC123"), { hostUid: "host", playerUids: ["host", "guest"], status: "lobby" });
+    await setDoc(doc(context.firestore(), "rooms/ABC123/cards/1"), { name: "", imagePath: "" });
   });
 });
 
@@ -32,5 +33,7 @@ test("Storage 只允許大廳房主上傳合格 JPEG", async () => {
   await assertFails(uploadBytes(ref(environment.authenticatedContext("guest").storage(), "rooms/ABC123/cards/1/guest.jpg"), bytes, { contentType: "image/jpeg" }));
   await assertFails(uploadBytes(ref(environment.unauthenticatedContext().storage(), "rooms/ABC123/cards/1/anon.jpg"), bytes, { contentType: "image/jpeg" }));
   await assertFails(uploadBytes(ref(environment.authenticatedContext("host").storage(), "rooms/ABC123/cards/1/not-image.jpg"), bytes, { contentType: "text/plain" }));
+  await assertFails(uploadBytes(ref(environment.authenticatedContext("host").storage(), "rooms/ABC123/cards/1/too-large.jpg"), new Uint8Array(5 * 1024 * 1024 + 1), { contentType: "image/jpeg" }));
+  await assertFails(uploadBytes(ref(environment.authenticatedContext("host").storage(), "rooms/ABC123/cards/99/missing.jpg"), bytes, { contentType: "image/jpeg" }));
   assert.ok(true);
 });

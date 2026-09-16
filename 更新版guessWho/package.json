@@ -16,6 +16,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspace @guesswho/game-server",
     "test:rules": "firebase emulators:exec --only firestore,storage \"tsx --test firebase/rules.test.ts\"",
+    "test:integration": "firebase emulators:exec --only auth,firestore,storage \"tsx scripts/integration.mts\"",
     "emulators": "firebase emulators:start --only auth,firestore,storage",
     "start": "npm run start --workspace @guesswho/web",
     "start:server": "npm run start --workspace @guesswho/game-server"

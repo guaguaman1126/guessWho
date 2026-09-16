@@ -18,6 +18,7 @@ service firebase.storage {
     match /rooms/{roomId}/cards/{cardId}/{fileName} {
       allow read: if isPlayer(roomId);
       allow create, update: if isLobbyHost(roomId)
+        && firestore.exists(/databases/(default)/documents/rooms/$(roomId)/cards/$(cardId))
         && fileName.matches('^[A-Za-z0-9_-]+\\.jpg$')
         && request.resource.size <= 5 * 1024 * 1024
         && request.resource.contentType == 'image/jpeg';

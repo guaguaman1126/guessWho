@@ -45,6 +45,7 @@ const validCounts = new Set<CardCount>([9, 16, 25]);
 export function createRoom(roomId: string, uid: string, cardCount: CardCount, retentionPolicy: RetentionPolicy, password: string | undefined, now: number): RoomAggregate {
   if (!validCounts.has(cardCount)) fail("卡片數量只能是 9、16 或 25 張");
   if (retentionPolicy !== "delete_when_empty" && retentionPolicy !== "retain") fail("保存方式不正確");
+  if (password !== undefined && typeof password !== "string") fail("密碼格式不正確");
   const cleanPassword = password?.trim() ?? "";
   if (retentionPolicy === "retain" && !cleanPassword) fail("保留房間必須設定密碼");
   return {
@@ -108,12 +109,14 @@ export function applyCommand(state: RoomAggregate, uid: string, command: GameCom
       const card = requireCard(command.payload.cardId);
       if (command.payload.name === undefined && command.payload.imagePath === undefined) fail("沒有卡片變更");
       if (command.payload.name !== undefined) {
+        if (typeof command.payload.name !== "string") fail("角色名稱格式不正確");
         const name = command.payload.name.trim();
         if (name.length > 24) fail("角色名稱最多 24 個字");
         card.name = name;
       }
       if (command.payload.imagePath !== undefined) {
         const path = command.payload.imagePath;
+        if (typeof path !== "string") fail("圖片路徑不正確");
         if (!path.startsWith(`rooms/${state.roomId}/cards/${card.id}/`) || !path.endsWith(".jpg")) fail("圖片路徑不正確");
         if (card.imagePath && card.imagePath !== path) result.imagePathsToDelete = [card.imagePath];
         card.imagePath = path;
@@ -131,6 +134,7 @@ export function applyCommand(state: RoomAggregate, uid: string, command: GameCom
     case "player:ready":
       requireLobby();
       if (uid === state.room.hostUid) fail("房主直接按開始即可");
+      if (typeof command.payload.ready !== "boolean") fail("準備狀態不正確");
       if (command.payload.ready && !validTarget(state, uid)) fail("請先選擇秘密目標");
       player.ready = command.payload.ready;
       break;

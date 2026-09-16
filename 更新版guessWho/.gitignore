@@ -1,8 +1,10 @@
 node_modules/
 .next/
+.next-live/
 dist/
 .env*
 !.env.example
+!apps/web/.env.local.example
 *.tsbuildinfo
 artifacts/
-
+*-debug.log

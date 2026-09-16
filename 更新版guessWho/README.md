@@ -1,10 +1,23 @@
-# GuessWho 前端體驗版
+# GuessWho 三層式重製版
 
-目前完成第一、二階段：npm workspace 架構、必要依賴、Server 健康檢查、共用型別及可操作的前端展示。**停在人工驗收點，尚未進入第三階段。**
+第三、四階段已完成：Next.js 前端、獨立 Socket.IO Game Server、Firebase Authentication／Firestore／Storage、權限規則、斷線恢復、清理工作與本機整合驗證均已接線。雲端設定已準備，但尚未替任何 Firebase／Google Cloud／Vercel 帳號部署。
 
-## 啟動
+## 架構
 
-使用 Node.js 22 以上（本次以 Node.js 24.13.0 驗證）。在 PowerShell 執行：
+```text
+Browser
+├─ Next.js／React／TypeScript／Tailwind CSS
+├─ Firebase Anonymous Auth ＋ Storage
+└─ Socket.IO
+   └─ Node.js／Express Game Server
+      └─ Firebase Admin SDK → Firestore／Storage
+```
+
+Game Server 是唯一裁判，Firestore 是永久狀態來源。Web Client 不能直接讀寫 Firestore；每位玩家收到的 `room:state` 只含自己的秘密目標與蓋牌。
+
+## 一般前端展示
+
+不啟動 Firebase 或 Game Server 也能看已驗收的單機展示：
 
 ```powershell
 cd "C:\Users\n1270\Documents\GitHub\guessWho\更新版guessWho"
@@ -12,77 +25,130 @@ npm ci
 npm run dev
 ```
 
-第一次安裝使用 `npm ci`；本次已安裝完成，現在只需 `npm run dev`。開啟 http://localhost:3000 。前端展示不需要 Firebase 設定或 Server。
+若沒有建立 `apps/web/.env.local`，開發模式預設使用展示資料。開啟 http://localhost:3000 。展示房號是 `DEMO01`；密碼房是 `KEEP01`，密碼為 `1234`。
 
-手機／平板與電腦連接相同區域網路時，可開啟 Next.js 啟動訊息中的 Network 網址；若無法連入，先確認 Windows 防火牆是否允許此本地開發服務。
+## 本機正式多人模式
 
-獨立 Server 骨架可另外啟動：
+需要三個 PowerShell 視窗。
+
+第一次先複製前端 Emulator 設定：
 
 ```powershell
+Copy-Item "apps/web/.env.local.example" "apps/web/.env.local"
+```
+
+視窗一，啟動 Firebase Emulator：
+
+```powershell
+npm run emulators
+```
+
+視窗二，讓 Firebase Admin SDK 連到 Emulator，再啟動 Game Server：
+
+```powershell
+$env:FIREBASE_PROJECT_ID="demo-guesswho"
+$env:FIREBASE_STORAGE_BUCKET="demo-guesswho.firebasestorage.app"
+$env:FIREBASE_AUTH_EMULATOR_HOST="127.0.0.1:9099"
+$env:FIRESTORE_EMULATOR_HOST="127.0.0.1:8080"
+$env:FIREBASE_STORAGE_EMULATOR_HOST="127.0.0.1:9199"
+$env:WEB_ORIGIN="http://localhost:3000"
 npm run dev:server
 ```
 
-健康檢查：http://localhost:4000/health 。回傳 `gameReady: false` 是預期結果；此 Server 尚未連接 Firebase 或處理遊戲事件。
+視窗三，啟動正式資料流的前端：
 
-## 如何驗收
+```powershell
+npm run dev
+```
 
-1. 首頁選「開一間遊戲房」，選擇 9／16／25 張及是否保留房間，進入展示大廳。
-2. 點角色卡，再按「設為秘密目標」。房主不需要準備。
-3. 右上角「展示工具」可切換 A／B 身分，或模擬另一位玩家選好目標並準備。
-4. 回到房主身分，按「開始遊戲」。點卡片可放大、蓋牌、翻回或二次確認指認。
-5. 完成口頭提問後，按「已完成提問」再「結束回合」。也可用展示工具切換到對方回合、暫停、勝負、載入及操作失敗情境。
-6. 在大廳選擇卡片數量後，按「確認變更」才會套用；取消或關閉不改卡組。檢查 25 → 9 只保留前九張。增加卡片時會出現空位，房主可上傳圖片／改名，或使用「用示範卡片補齊空位」。
-7. 卡片編輯可選取 JPEG／PNG／WebP（最大 5 MB），用滑鼠或手指拖曳取景，以雙指／滾輪／滑桿縮放，再產生 600 × 600 JPEG 本地預覽。裁切框固定正方形，也可重設位置與縮放。
-8. 加入展示房可使用 `DEMO01`；密碼房為 `KEEP01`，展示密碼為 `1234`。其他房號會顯示錯誤。創建時輸入的密碼只展示表單，不保存或寫入網址。
+以一般視窗建立房間，再用無痕視窗輸入房號加入，即可得到兩個不同匿名 uid。Firebase Emulator UI 位於 http://localhost:4001 。若先前已開著 Next.js，修改 `.env.local` 後必須重新啟動它。
 
-遊戲情境會補入 A 的示範目標 01、B 的示範目標 03，方便檢查猜中與猜錯。切換身分可檢查各自的目標及蓋牌筆記；畫面接收的 `RoomState` 只含目前身分的私人資料。
-
-## 目前的界線
-
-- 所有展示狀態只存在目前頁面記憶體，重新整理／離開會重設，不提供真正的多人同步。
-- 「保留房間」、密碼驗證、對手、倒數、權限及重連都是展示情境，不是正式後端功能。
-- 圖片裁切是真的；上傳 Storage、Firestore 寫入、Firebase 匿名登入及 Socket.IO 連線尚未接上。
-- 不會執行房間刪除、30 天清理、排程或雲端部署。
-- `npm run dev` 自動啟用展示；正式 `npm run build` 預設關閉展示操作，顯示服務尚未開放。若要驗收最佳化的展示版本，僅在本地建置前設定 `NEXT_PUBLIC_DEMO_MODE=true`，不要用於正式遊戲部署。
-- 五種尺寸以桌面瀏覽器的 viewport 模擬檢查。實體 iPhone／iPad 的網址列、安全區域、捏合手勢與軟鍵盤，仍請在人工驗收時確認。
-- `npm audit` 目前回報 2 項 moderate 間接相依提示，來源是 `firebase-admin → @google-cloud/storage → gaxios 6 → uuid 9`。已使用目前的 `firebase-admin 14.4.0`，相容性的 `npm audit fix` 仍無法更新這條舊相依；第三階段啟用 Firebase Admin 前再確認上游版本，不強制覆寫其相依套件。
-
-## 檔案位置
-
-| 路徑 | 用途 |
-|---|---|
-| `apps/web/src/components/home.tsx` | 首頁、建立／加入房間表單、規則 |
-| `apps/web/src/components/room.tsx` | 棋盤、大廳、回合操作、放大視窗與展示工具 |
-| `apps/web/src/components/crop-editor.tsx` | Canvas 正方形裁切與 JPEG 預覽 |
-| `apps/web/src/components/ui.tsx` | 按鈕、原生 dialog、圖片載入與錯誤狀態 |
-| `apps/web/src/lib/demo.ts` | 唯一的展示資料入口，下一階段替換為真實傳輸 |
-| `apps/web/src/app/globals.css` | Tailwind、Retro 色彩、字體與觸控規則 |
-| `apps/web/public/assets/characters/` | 25 張本專案原創 SVG 角色插畫，無外部圖片請求 |
-| `apps/game-server/src/server.ts` | 僅健康檢查的 Express 骨架 |
-| `packages/shared/` | 房間安全狀態與 Socket 事件共用型別 |
-| `scripts/check-preview.mjs` | 使用既有 Playwright 的瀏覽器驗證脚本 |
-
-Firebase 規則與正式 Server 模組於第三階段才建立，避免把空架構誤認為已完成。
-
-## 驗證指令
+## 驗證
 
 ```powershell
 npm run typecheck
+npm run test
+npm run test:rules
+npm run test:integration
 npm run build
 ```
 
-瀏覽器驗證需先啟動前端，再使用已安裝的 Playwright：
+- `test`：純遊戲規則，涵蓋房主開始、秘密隔離、縮減卡組、蓋牌、猜測與逾時移交。
+- `test:rules`：Firestore 全面拒絕 Web Client；Storage 只允許大廳房主上傳最大 `5 MB` 的 JPEG。
+- `test:integration`：真實 Auth／Firestore／Storage Emulator 加上 Socket.IO，涵蓋兩人加入、第三人拒絕、權限、秘密資料、重連、Server 重啟、逾時判負、空房刪除、密碼與閒置清理。
+
+第一次執行 Emulator 測試時，Firebase CLI 會下載官方 Firestore 與 Storage Emulator 元件。
+
+## 正式 Firebase 設定
+
+1. 建立 Firebase 專案並啟用 Anonymous Authentication、Cloud Firestore 及 Storage。
+2. 將前端 Firebase Web App 設定填入 `apps/web/.env.local` 或 Vercel 環境變數；公開 Firebase Web 設定不是伺服器密鑰。
+3. 部署規則：
 
 ```powershell
-node scripts/check-preview.mjs "<Playwright 套件的絕對路徑>"
+firebase use --add
+firebase deploy --only firestore:rules,storage
 ```
 
-此腳本使用本機 Edge，不會把瀏覽器測試工具加入產品依賴。截圖輸出於被 Git 忽略的 `artifacts/`。
+4. Game Server 的 Cloud Run Service Account 至少需要存取 Firestore 與 Storage 物件的權限。不要提交 Service Account JSON；Cloud Run 直接綁定 Service Account。
 
-版面檢查涵蓋 320 × 568、390 × 844、768 × 1024、1024 × 768、1440 × 900；每個尺寸檢查 9／16／25 張卡片的大廳與遊戲狀態。互動檢查涵蓋身分權限、準備、縮減卡組、提問、指認、蓋牌、重連、賽後結果、裁切、操作失敗重試及密碼房表單。
+## Game Server 部署到 Cloud Run
 
-實作參考：[Next.js 安裝文件](https://nextjs.org/docs/app/getting-started/installation)、[Tailwind 的 Next.js 設定](https://tailwindcss.com/docs/installation/framework-guides/nextjs)。安裝版本由根目錄 `package-lock.json` 固定。
+先建立 Artifact Registry repository 與執行用 Service Account，再設定變數：
 
-## 人工驗收點
+```powershell
+$PROJECT_ID="你的專案 ID"
+$REGION="asia-east1"
+$IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/guesswho/game-server:latest"
+gcloud builds submit --project $PROJECT_ID --config cloudbuild.yaml --substitutions "_IMAGE=$IMAGE" .
+gcloud run deploy guesswho-game-server --project $PROJECT_ID --region $REGION --image $IMAGE --allow-unauthenticated --min 0 --max 1 --cpu 1 --memory 512Mi --timeout 3600 --service-account "你的執行用 Service Account" --set-env-vars "FIREBASE_PROJECT_ID=$PROJECT_ID,FIREBASE_STORAGE_BUCKET=你的 Storage bucket,WEB_ORIGIN=你的前端網址,CLEANUP_AUDIENCE=你的 Cloud Run 網址,CLEANUP_SCHEDULER_SERVICE_ACCOUNT=你的 Scheduler Service Account"
+```
 
-請先確認版面、圖片大小、操作流程與美術風格。只有使用者明確確認前端並同意開始後端後，才能進入第三階段。
+第一版固定 `maximum instances = 1`，因此不需要 Redis Adapter。Socket.IO 服務必須允許公開連線；`/internal/cleanup` 另外驗證 Cloud Scheduler 的 OIDC token 與指定 email。
+
+每日清理排程範例：
+
+```powershell
+gcloud scheduler jobs create http guesswho-daily-cleanup --project $PROJECT_ID --location $REGION --schedule "0 4 * * *" --uri "你的 Cloud Run 網址/internal/cleanup" --http-method POST --oidc-service-account-email "你的 Scheduler Service Account" --oidc-token-audience "你的 Cloud Run 網址"
+```
+
+正式環境不要設定 `CLEANUP_SECRET`；它只供本機整合測試使用。
+
+## Next.js 部署到 Vercel
+
+repository 根目錄的 `vercel.json` 已指定 monorepo build。將下列環境變數放進 Vercel，並把 `NEXT_PUBLIC_GAME_SERVER_URL` 設為 Cloud Run HTTPS 網址：
+
+```text
+NEXT_PUBLIC_DEMO_MODE=false
+NEXT_PUBLIC_FIREBASE_API_KEY
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+NEXT_PUBLIC_FIREBASE_PROJECT_ID
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+NEXT_PUBLIC_FIREBASE_APP_ID
+NEXT_PUBLIC_FIREBASE_USE_EMULATORS=false
+NEXT_PUBLIC_GAME_SERVER_URL
+```
+
+部署 Web 後，記得把實際 Vercel 網址更新到 Cloud Run 的 `WEB_ORIGIN`。所有 `NEXT_PUBLIC_` 值會在 `next build` 時寫入瀏覽器 bundle，修改後需重新部署 Web。
+
+## 主要檔案
+
+| 路徑 | 用途 |
+|---|---|
+| `apps/web/src/components/home.tsx` | 建立／加入正式房間及展示入口 |
+| `apps/web/src/components/room.tsx` | 共用的 Retro 響應式房間 UI |
+| `apps/web/src/lib/live.ts` | Socket 房間狀態、Storage 圖片與重連 |
+| `apps/web/src/lib/firebase-client.ts` | 匿名登入及 Firebase Client 初始化 |
+| `apps/web/src/lib/demo.ts` | 可獨立使用的單機展示資料 |
+| `apps/game-server/src/game-rules.ts` | 純遊戲規則與安全狀態輸出 |
+| `apps/game-server/src/firebase-admin.ts` | Firestore transaction 與 Storage 清理 |
+| `apps/game-server/src/server.ts` | Token 驗證、Socket 事件、斷線與每日清理端點 |
+| `firebase/firestore.rules` | 禁止 Web Client 直接存取遊戲狀態 |
+| `firebase/storage.rules` | 房主、大廳、路徑、MIME 與大小限制 |
+| `scripts/integration.mts` | 兩位真實匿名玩家的 Emulator 整合測試 |
+
+完整遊戲與資料規則見 [`agent.md`](./agent.md)，前端與響應式設計規範見 [`ART_DIRECTION.md`](./ART_DIRECTION.md)。
+
+## 已知依賴提示
+
+`npm audit` 仍可能回報 Firebase 工具鏈或 `firebase-admin` 的間接相依提示。不要使用 `npm audit fix --force` 強制降級或覆寫；部署前重新檢查上游版本與實際 advisory 範圍。

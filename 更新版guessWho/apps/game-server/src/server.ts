@@ -20,6 +20,7 @@ export function createGameServer() {
   const sockets = new Map<string, Map<string, Set<string>>>();
   const expiryTimers = new Map<string, ReturnType<typeof setTimeout>>();
   const oauth = new OAuth2Client();
+  let shuttingDown = false;
 
   app.disable("x-powered-by");
   app.get("/health", (_req, res) => res.json({ ok: true, stage: "ready", gameReady: true }));
@@ -42,6 +43,7 @@ export function createGameServer() {
     const uid = socket.data.uid as string;
     const run = <K extends keyof CommandPayloads>(type: K, payload: CommandPayloads[K], ack: (result: Acknowledgment) => void) => {
       void handle(async () => {
+        validateObject(payload);
         const roomId = currentRoom(socket);
         const { value } = await updateAggregate(roomId, state => applyCommand(state, uid, { type, payload } as GameCommand, Date.now()));
         await deleteImages(value.imagePathsToDelete);
@@ -96,6 +98,7 @@ export function createGameServer() {
     socket.on("turn:end", (payload, ack) => run("turn:end", payload, ack));
 
     socket.on("disconnect", () => {
+      if (shuttingDown) return;
       const roomId = socket.data.roomId as string | undefined;
       if (!roomId) return;
       leaveSocket(socket, roomId, uid, sockets);
@@ -133,7 +136,26 @@ export function createGameServer() {
     }), graceMs + 25));
   }
 
-  return { app, io, httpServer, close: () => new Promise<void>(resolve => io.close(() => httpServer.close(() => resolve()))) };
+  const ready = reconcileAfterRestart();
+  async function reconcileAfterRestart(): Promise<void> {
+    const now = Date.now();
+    for (const room of await listRooms()) {
+      for (const player of room.players.filter(item => item.connected)) {
+        await updateAggregate(room.roomId, state => disconnectPlayer(state, player.uid, now, graceMs));
+        scheduleExpiry(room.roomId, player.uid);
+      }
+    }
+  }
+
+  return {
+    app, io, httpServer, ready,
+    close: () => new Promise<void>(resolve => {
+      shuttingDown = true;
+      for (const timer of expiryTimers.values()) clearTimeout(timer);
+      expiryTimers.clear();
+      io.close(() => httpServer.close(() => resolve()));
+    }),
+  };
 }
 
 async function cleanupExpiredRooms(): Promise<number> {
@@ -160,10 +182,14 @@ async function cleanupAuthorized(header: string | undefined, oauth: OAuth2Client
 }
 
 async function handle<T extends Acknowledgment>(work: () => Promise<T>, ack?: (result: Acknowledgment) => void): Promise<void> {
-  try { ack?.(await work()); }
+  try {
+    const result = await work();
+    if (ack) ack(result);
+  }
   catch (cause) {
     const message = cause instanceof Error ? safeMessage(cause.message) : "操作失敗";
-    ack?.({ ok: false, error: message });
+    if (ack) ack({ ok: false, error: message });
+    else console.error(`[game-server] ${message}`);
   }
 }
 
@@ -218,6 +244,6 @@ function clearExpiry(roomId: string, uid: string, timers: Map<string, ReturnType
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const game = createGameServer();
   const port = Number(process.env.PORT ?? 4000);
-  game.httpServer.listen(port, () => console.log(`Game Server ready on http://localhost:${port}`));
+  void game.ready.then(() => game.httpServer.listen(port, () => console.log(`Game Server ready on http://localhost:${port}`)));
   process.on("SIGTERM", () => void game.close());
 }
