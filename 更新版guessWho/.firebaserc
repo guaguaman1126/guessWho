@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "demo-guesswho"
-  }
+    "default": "demo-guesswho",
+    "production": "guesswho-new"
+  },
+  "targets": {},
+  "etags": {}
 }
