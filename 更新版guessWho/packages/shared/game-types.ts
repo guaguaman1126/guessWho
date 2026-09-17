@@ -1,7 +1,6 @@
 export type CardCount = 9 | 16 | 25;
 export type RoomStatus = "lobby" | "playing" | "paused";
 export type RetentionPolicy = "delete_when_empty" | "retain";
-export type TurnAction = null | "question" | "guess";
 export interface Card { id: number; name: string; imagePath: string }
 export interface PublicPlayer {
   uid: string; name: string; seat: "A" | "B"; ready: boolean;
@@ -11,7 +10,7 @@ export interface GameResult { winnerUid: string; reason: "correct_guess" | "disc
 export interface RoomState {
   roomId: string; status: RoomStatus; hostUid: string | null;
   cardCount: CardCount; retentionPolicy: RetentionPolicy; cards: Card[];
-  players: PublicPlayer[]; currentTurnUid: string | null; turnAction: TurnAction;
+  players: PublicPlayer[]; currentTurnUid: string | null;
   // 私人欄位只包含接收者自己的資料，不包含對手答案或排除筆記。
   self: { uid: string; targetCardId: number | null; foldedCardIds: number[] };
   lastResult: GameResult | null;

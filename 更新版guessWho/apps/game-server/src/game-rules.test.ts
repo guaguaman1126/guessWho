@@ -32,6 +32,28 @@ test("縮減卡組保留準備，只清除失效目標與圖片", () => {
   assert.deepEqual(result.imagePathsToDelete, []);
 });
 
+test("大廳內兩位玩家都能修改角色卡，開始後都不能修改", () => {
+  const room = readyRoom();
+  applyCommand(room, "host", { type: "card:update", payload: { cardId: 1, name: "房主修改" } }, 6);
+  applyCommand(room, "guest", { type: "card:update", payload: { cardId: 2, name: "玩家修改" } }, 7);
+  assert.equal(room.cards[0]?.name, "房主修改");
+  assert.equal(room.cards[1]?.name, "玩家修改");
+
+  applyCommand(room, "host", { type: "game:start", payload: {} }, 8, () => 0);
+  assert.throws(() => applyCommand(room, "host", { type: "card:update", payload: { cardId: 1, name: "不能修改" } }, 9), /只能在大廳/);
+  assert.throws(() => applyCommand(room, "guest", { type: "card:update", payload: { cardId: 2, name: "不能修改" } }, 10), /只能在大廳/);
+});
+
+test("完成提問後立即換到另一位玩家", () => {
+  const room = readyRoom();
+  applyCommand(room, "host", { type: "game:start", payload: {} }, 6, () => 0);
+  applyCommand(room, "host", { type: "turn:question-complete", payload: {} }, 7);
+  assert.equal(room.room.currentTurnUid, "guest");
+  assert.throws(() => applyCommand(room, "host", { type: "turn:question-complete", payload: {} }, 8), /現在不是你的回合/);
+  applyCommand(room, "guest", { type: "turn:question-complete", payload: {} }, 9);
+  assert.equal(room.room.currentTurnUid, "host");
+});
+
 test("蓋牌會保存，猜錯自動換回合，猜中回大廳", () => {
   const room = readyRoom();
   applyCommand(room, "host", { type: "game:start", payload: {} }, 6, () => 0);

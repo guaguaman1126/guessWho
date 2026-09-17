@@ -95,7 +95,6 @@ export function createGameServer() {
     socket.on("turn:question-complete", (payload, ack) => run("turn:question-complete", payload, ack));
     socket.on("game:guess", (payload, ack) => run("game:guess", payload, ack));
     socket.on("card:fold-toggle", (payload, ack) => run("card:fold-toggle", payload, ack));
-    socket.on("turn:end", (payload, ack) => run("turn:end", payload, ack));
 
     socket.on("disconnect", () => {
       if (shuttingDown) return;

@@ -84,7 +84,7 @@ export function Home() {
     <footer className="flex flex-wrap justify-between gap-3 border-t border-ink/25 py-5 text-xs text-ink/60"><span>GUESSWHO — 給面對面的好時光。</span><span>本地插畫卡組 · FRONTEND PREVIEW 01</span></footer>
     {panel && <Modal title={panel === "create" ? "準備一張屬於你的遊戲桌" : panel === "join" ? "你的座位準備好了" : "一本很短的遊戲說明書"} onClose={() => open(null)}>
       {panel === "rules" ? <div className="space-y-5 text-sm leading-7">
-        {["選一張秘密角色卡，不讓對方知道。房主選好後，等待朋友準備再開始。", "輪到你時，口頭問一個問題，或直接指認角色。問答結束後按「已完成提問」，再結束回合。", "隨時蓋住已排除的卡片，也可以翻回。這些是你自己的筆記。", "指認猜錯會自動換回合；猜中就獲勝。下一局沿用卡組，重新選目標。"].map((text, i) => <p key={text}><span className="mr-3 font-mono text-orange">0{i + 1}</span>{text}</p>)}
+        {["選一張秘密角色卡，不讓對方知道。房主選好後，等待朋友準備再開始。", "輪到你時，口頭問一個問題，或直接指認角色。問答結束後按「已完成提問」，就會直接換對方。", "隨時蓋住已排除的卡片，也可以翻回。這些是你自己的筆記。", "指認猜錯會自動換回合；猜中就獲勝。下一局沿用卡組，重新選目標。"].map((text, i) => <p key={text}><span className="mr-3 font-mono text-orange">0{i + 1}</span>{text}</p>)}
         <p className="rounded-lg bg-paper p-3 text-xs">{demoEnabled ? "這是單機前端展示。房間加入、夥伴與連線狀態都是模擬；重新整理會重設。" : "正式版使用匿名登入識別座位，並由伺服器同步回合與保存資料。"}</p>
       </div> : <form onSubmit={submit} className="space-y-5">
         {panel === "create" ? <>

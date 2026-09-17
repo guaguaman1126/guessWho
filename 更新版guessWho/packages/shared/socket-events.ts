@@ -11,7 +11,6 @@ export interface CommandPayloads {
   "turn:question-complete": Record<string, never>;
   "game:guess": { cardId: number };
   "card:fold-toggle": { cardId: number };
-  "turn:end": Record<string, never>;
 }
 export type ClientEvents = { [K in keyof CommandPayloads]: (payload: CommandPayloads[K], ack: (result: Acknowledgment) => void) => void };
 export interface ServerEvents { "room:state": (state: RoomState) => void; "room:error": (message: string) => void }

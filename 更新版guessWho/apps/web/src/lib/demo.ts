@@ -7,7 +7,7 @@ import type { GameCommand } from "@guesswho/shared/socket-events";
 const names = ["阿栗", "小葵", "木木", "大福", "橘子", "阿藍", "米米", "花花", "阿哲", "小夏", "豆豆", "可可", "阿森", "露露", "小麥", "阿莫", "桃子", "阿樂", "小松", "果果", "阿白", "小雨", "茶茶", "阿海", "圓圓"];
 export const sampleCards: Card[] = names.map((name, index) => ({ id: index + 1, name, imagePath: `/assets/characters/${index + 1}.svg` }));
 export type Persona = "host" | "guest";
-export type Scenario = "lobby" | "playing" | "opponent" | "question" | "paused" | "win" | "lose" | "loading" | "error" | "missing" | "transfer";
+export type Scenario = "lobby" | "playing" | "opponent" | "paused" | "win" | "lose" | "loading" | "error" | "missing" | "transfer";
 export const demoEnabled = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
   || (process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_DEMO_MODE !== "false");
 
@@ -17,7 +17,7 @@ export function initialRoom(roomId: string, count: CardCount, retention: Retenti
     players: [
       { uid: "host", name: "你", seat: "A", ready: false, connected: true, hasTarget: false, disconnectDeadline: null },
       { uid: "guest", name: "小夥伴", seat: "B", ready: false, connected: true, hasTarget: false, disconnectDeadline: null },
-    ], currentTurnUid: null, turnAction: null,
+    ], currentTurnUid: null,
     self: { uid: "host", targetCardId: null, foldedCardIds: [] }, lastResult: null };
 }
 
@@ -59,7 +59,7 @@ export function useDemoRoom(roomId: string, count: CardCount, retention: Retenti
 
   function finish(current: RoomState, winner: string, reason: "correct_guess" | "disconnect_forfeit"): RoomState {
     privateNotes.current = { host: { target: null, folded: [] }, guest: { target: null, folded: [] } };
-    return { ...current, status: "lobby", currentTurnUid: null, turnAction: null,
+    return { ...current, status: "lobby", currentTurnUid: null,
       players: current.players.map(player => ({ ...player, ready: false, hasTarget: false, connected: true, disconnectDeadline: null })),
       lastResult: { winnerUid: winner, reason, endedAt: Date.now() } };
   }
@@ -110,7 +110,7 @@ export function useDemoRoom(roomId: string, count: CardCount, retention: Retenti
           break;
         }
         case "card:update": {
-          requireHost();
+          requireLobby();
           const card = cardFor(command.payload.cardId);
           if (command.payload.name !== undefined) card.name = command.payload.name.trim();
           if (command.payload.imagePath !== undefined) card.imagePath = command.payload.imagePath;
@@ -130,7 +130,7 @@ export function useDemoRoom(roomId: string, count: CardCount, retention: Retenti
         case "game:start":
           requireHost();
           if (startReason) throw new Error(startReason);
-          current.status = "playing"; current.currentTurnUid = uid; current.turnAction = null; current.lastResult = null;
+          current.status = "playing"; current.currentTurnUid = uid; current.lastResult = null;
           setNotice("展示局開始，由你先手"); break;
         case "card:fold-toggle":
           if (current.status !== "playing") throw new Error("目前不能蓋牌");
@@ -138,19 +138,16 @@ export function useDemoRoom(roomId: string, count: CardCount, retention: Retenti
           myNotes.folded = myNotes.folded.includes(command.payload.cardId) ? myNotes.folded.filter(id => id !== command.payload.cardId) : [...myNotes.folded, command.payload.cardId];
           break;
         case "turn:question-complete":
-          if (!myTurn || current.turnAction) throw new Error("現在不能提問");
-          current.turnAction = "question"; break;
-        case "turn:end":
-          if (!myTurn || current.turnAction !== "question") throw new Error("完成口頭提問後才能結束回合");
-          current.currentTurnUid = uid === "host" ? "guest" : "host"; current.turnAction = null; break;
+          if (!myTurn) throw new Error("現在不能提問");
+          current.currentTurnUid = uid === "host" ? "guest" : "host"; break;
         case "game:guess":
-          if (!myTurn || current.turnAction) throw new Error("目前不能指認");
+          if (!myTurn) throw new Error("目前不能指認");
           cardFor(command.payload.cardId);
           // 示範答案只存在 mock 入口，不會放入 RoomState。
           if (command.payload.cardId === privateNotes.current[uid === "host" ? "guest" : "host"].target) {
             setRoom(finish(current, uid, "correct_guess")); setNotice("猜中了！回到大廳，再來一局。"); return true;
           }
-          current.currentTurnUid = uid === "host" ? "guest" : "host"; current.turnAction = null;
+          current.currentTurnUid = uid === "host" ? "guest" : "host";
           setNotice("猜錯了，現在換對方的回合"); break;
         default: throw new Error("此功能尚未連接正式服務");
       }
@@ -185,7 +182,6 @@ export function useDemoRoom(roomId: string, count: CardCount, retention: Retenti
       }
       current.status = value === "paused" ? "paused" : "playing";
       current.currentTurnUid = value === "opponent" ? (uid === "host" ? "guest" : "host") : uid;
-      current.turnAction = value === "question" ? "question" : null;
       if (value === "paused") {
         const other = current.players.find(player => player.uid !== uid)!;
         other.connected = false; other.disconnectDeadline = Date.now() + 60000; setRemaining(60);

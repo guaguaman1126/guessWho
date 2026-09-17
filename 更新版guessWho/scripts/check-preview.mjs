@@ -63,12 +63,10 @@ try {
   await page.waitForFunction(() => document.querySelector('[data-card-id="2"]')?.getAttribute('aria-label')?.includes('已蓋牌'));
   assert((await page.locator('[data-card-id="2"]').getAttribute("aria-label")).includes("已蓋牌"));
   await page.getByRole("button", { name: "已完成提問 ✓" }).click();
-  await page.getByRole("button", { name: "結束回合 →" }).waitFor();
+  await page.getByRole("button", { name: "對手的回合" }).waitFor();
   await page.locator('[data-card-id="3"]').click();
   assert.equal(await modal().getByRole("button", { name: "指認這個人" }).count(), 0);
   await close();
-  await page.getByRole("button", { name: "結束回合 →" }).click();
-  await page.getByRole("button", { name: "對手的回合" }).waitFor();
   await scenario("paused");
   await page.getByRole("button", { name: "模擬重連，繼續遊戲" }).click();
   assert((await page.locator('[data-card-id="2"]').getAttribute("aria-label")).includes("已蓋牌"));
@@ -87,7 +85,7 @@ try {
   assert.equal(await page.getByRole("button", { name: "開始遊戲 →", exact: true }).count(), 0);
   await page.getByRole("button", { name: "我準備好了" }).waitFor();
   await page.locator('[data-card-id="1"]').click();
-  assert.equal(await modal().getByRole("textbox", { name: "角色名稱", exact: true }).count(), 0);
+  assert.equal(await modal().getByRole("textbox", { name: "角色名稱", exact: true }).count(), 1);
   await modal().getByRole("button", { name: "設為秘密目標" }).click();
   await page.getByRole("button", { name: "我準備好了" }).click();
   await page.getByRole("button", { name: "取消準備" }).waitFor();

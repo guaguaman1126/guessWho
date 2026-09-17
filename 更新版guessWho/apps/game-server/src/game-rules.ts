@@ -1,5 +1,5 @@
 import { randomInt } from "node:crypto";
-import type { Card, CardCount, GameResult, RetentionPolicy, RoomState, RoomStatus, TurnAction } from "@guesswho/shared/game-types";
+import type { Card, CardCount, GameResult, RetentionPolicy, RoomState, RoomStatus } from "@guesswho/shared/game-types";
 import type { GameCommand } from "@guesswho/shared/socket-events";
 
 export type RoomRecord = {
@@ -9,7 +9,6 @@ export type RoomRecord = {
   cardCount: CardCount;
   retentionPolicy: RetentionPolicy;
   currentTurnUid: string | null;
-  turnAction: TurnAction;
   lastResult: GameResult | null;
   lastEnteredAt: number;
   emptySince: number | null;
@@ -50,7 +49,7 @@ export function createRoom(roomId: string, uid: string, cardCount: CardCount, re
   if (retentionPolicy === "retain" && !cleanPassword) fail("保留房間必須設定密碼");
   return {
     roomId,
-    room: { status: "lobby", hostUid: uid, playerUids: [uid], cardCount, retentionPolicy, currentTurnUid: null, turnAction: null, lastResult: null, lastEnteredAt: now, emptySince: null, createdAt: now, updatedAt: now },
+    room: { status: "lobby", hostUid: uid, playerUids: [uid], cardCount, retentionPolicy, currentTurnUid: null, lastResult: null, lastEnteredAt: now, emptySince: null, createdAt: now, updatedAt: now },
     players: [{ uid, seat: "A", ready: false, connected: true, disconnectDeadline: null, foldedCardIds: [] }],
     targets: {},
     cards: Array.from({ length: cardCount }, (_, index) => ({ id: index + 1, name: "", imagePath: "" })),
@@ -105,7 +104,7 @@ export function applyCommand(state: RoomAggregate, uid: string, command: GameCom
       break;
     }
     case "card:update": {
-      requireHost();
+      requireLobby();
       const card = requireCard(command.payload.cardId);
       if (command.payload.name === undefined && command.payload.imagePath === undefined) fail("沒有卡片變更");
       if (command.payload.name !== undefined) {
@@ -147,31 +146,21 @@ export function applyCommand(state: RoomAggregate, uid: string, command: GameCom
       if (!guest?.ready) fail("等待另一位玩家按下準備");
       state.room.status = "playing";
       state.room.currentTurnUid = state.players[chooseFirst(state.players.length)]!.uid;
-      state.room.turnAction = null;
       state.room.lastResult = null;
       break;
     }
-    case "turn:question-complete":
+    case "turn:question-complete": {
       requireTurn(state, uid);
-      if (state.room.turnAction !== null) fail("這個回合已經行動過");
-      state.room.turnAction = "question";
-      break;
-    case "turn:end": {
-      requireTurn(state, uid);
-      if (state.room.turnAction !== "question") fail("完成口頭提問後才能結束回合");
       state.room.currentTurnUid = otherPlayer(state, uid).uid;
-      state.room.turnAction = null;
       break;
     }
     case "game:guess": {
       requireTurn(state, uid);
-      if (state.room.turnAction !== null) fail("這個回合已經行動過");
       requireCard(command.payload.cardId);
       const opponent = otherPlayer(state, uid);
       if (state.targets[opponent.uid] === command.payload.cardId) finishGame(state, uid, "correct_guess", now);
       else {
         state.room.currentTurnUid = opponent.uid;
-        state.room.turnAction = null;
       }
       break;
     }
@@ -216,7 +205,6 @@ export function removePlayer(state: RoomAggregate, uid: string, now: number, exp
     if (state.room.retentionPolicy === "delete_when_empty") return { deleteRoom: true, imagePathsToDelete: state.cards.map(card => card.imagePath).filter(Boolean) };
     state.room.status = "lobby";
     state.room.currentTurnUid = null;
-    state.room.turnAction = null;
     state.room.emptySince = now;
     state.room.hostUid = null;
     state.targets = {};
@@ -244,7 +232,6 @@ export function toRoomState(state: RoomAggregate, uid: string): RoomState {
       disconnectDeadline: player.disconnectDeadline,
     })),
     currentTurnUid: state.room.currentTurnUid,
-    turnAction: state.room.turnAction,
     self: { uid, targetCardId: state.targets[uid] ?? null, foldedCardIds: [...state.players.find(item => item.uid === uid)!.foldedCardIds] },
     lastResult: state.room.lastResult,
   };
@@ -253,7 +240,6 @@ export function toRoomState(state: RoomAggregate, uid: string): RoomState {
 function finishGame(state: RoomAggregate, winnerUid: string, reason: GameResult["reason"], now: number): void {
   state.room.status = "lobby";
   state.room.currentTurnUid = null;
-  state.room.turnAction = null;
   state.room.lastResult = { winnerUid, reason, endedAt: now };
   state.targets = {};
   for (const player of state.players) {

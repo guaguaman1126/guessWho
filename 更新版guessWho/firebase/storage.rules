@@ -9,20 +9,19 @@ service firebase.storage {
       return request.auth != null && request.auth.uid in room(roomId).data.playerUids;
     }
 
-    function isLobbyHost(roomId) {
-      return request.auth != null
-        && room(roomId).data.hostUid == request.auth.uid
+    function isLobbyPlayer(roomId) {
+      return isPlayer(roomId)
         && room(roomId).data.status == 'lobby';
     }
 
     match /rooms/{roomId}/cards/{cardId}/{fileName} {
       allow read: if isPlayer(roomId);
-      allow create, update: if isLobbyHost(roomId)
+      allow create, update: if isLobbyPlayer(roomId)
         && firestore.exists(/databases/(default)/documents/rooms/$(roomId)/cards/$(cardId))
         && fileName.matches('^[A-Za-z0-9_-]+\\.jpg$')
         && request.resource.size <= 5 * 1024 * 1024
         && request.resource.contentType == 'image/jpeg';
-      allow delete: if isLobbyHost(roomId);
+      allow delete: if isLobbyPlayer(roomId);
     }
   }
 }
