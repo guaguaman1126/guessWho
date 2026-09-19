@@ -110,7 +110,6 @@ rooms/{roomId}
   cardCount: 9 | 16 | 25
   retentionPolicy: delete_when_empty | retain
   currentTurnUid: uid | null
-  lastResult: { winnerUid, reason, endedAt } | null
   lastEnteredAt
   emptySince
   createdAt
@@ -159,9 +158,10 @@ Server 回傳：
 ```text
 room:state
 room:error
+game:ended { winnerUid, reason }
 ```
 
-所有前端事件都使用 acknowledgment 回傳成功或錯誤。第一版只用一個 `room:state` 傳完整安全狀態，不先建立大量細碎事件。
+所有前端事件都使用 acknowledgment 回傳成功或錯誤。Server 平時以 `room:state` 傳完整安全狀態；`game:ended` 是結束當下只送給在線玩家一次的 UI 通知，不保存、不補送，也不使用 acknowledgment。
 
 ## 完整遊戲規則
 
@@ -229,7 +229,8 @@ room:error
 
 ### 每局結束與下一局
 
-- 猜中或斷線逾時判負後，Server 原子化寫入 `lastResult`，再把房間送回 `lobby`。
+- 猜中或斷線逾時判負後，Server 先原子化把房間送回 `lobby`，成功後再以 `game:ended { winnerUid, reason }` 通知目前在線玩家一次。
+- 結算通知不寫入 Firestore，也不在重新整理或重新連線後補送；當時離線的玩家可能看不到結算，這是此小遊戲接受的簡化邊界。
 - 回到 `lobby` 時沿用上一局的 `cardCount`、卡片名稱與圖片，並解除卡組鎖定。
 - 同時清除 `currentTurnUid`、雙方 ready、雙方 target 與 `foldedCardIds`。
 - 房主可以在下一局開始前調整卡片數量或內容。

@@ -31,7 +31,7 @@ function LiveRoom(props: Props) {
 type Controller = ReturnType<typeof useDemoRoom> & { uploadCardImage?: (cardId: number, dataUrl: string) => Promise<boolean>; leave?: () => Promise<boolean> };
 function RoomView({ roomId, count, controller: demo, mode }: Props & { controller: Controller; mode: "demo" | "live" }) {
   const router = useRouter();
-  const { state, isHost, me, uid, busy, loading, error, notice, remaining, startReason } = demo;
+  const { state, isHost, me, uid, busy, loading, error, notice, remaining, result, startReason } = demo;
   const [selected, setSelected] = useState<number | null>(null);
   const [panel, setPanel] = useState<"settings" | "demo" | "target" | "leave" | "rules" | null>(null);
   const [pendingCount, setPendingCount] = useState<CardCount>(count);
@@ -39,7 +39,6 @@ function RoomView({ roomId, count, controller: demo, mode }: Props & { controlle
   const [name, setName] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState("");
-  const [dismissedResult, setDismissedResult] = useState<number | null>(null);
   const card = state.cards.find(item => item.id === selected);
   const target = state.cards.find(item => item.id === state.self.targetCardId);
   const folded = selected !== null && state.self.foldedCardIds.includes(selected);
@@ -48,7 +47,6 @@ function RoomView({ roomId, count, controller: demo, mode }: Props & { controlle
   const paused = state.status === "paused";
   const canGuess = state.status === "playing" && myTurn;
   const targetLocked = !isHost && me.ready && state.self.targetCardId !== null;
-  const result = state.lastResult && state.lastResult.endedAt !== dismissedResult ? state.lastResult : null;
   const other = state.players.find(player => player.uid !== uid) ?? { connected: false, ready: false };
   function closeCard() { setSelected(null); setConfirmGuess(false); setFile(null); setFileError(""); demo.clearError(); }
   function openCard(id: number) { const next = state.cards.find(item => item.id === id)!; setName(next.name); setSelected(id); setConfirmGuess(false); }
@@ -133,6 +131,6 @@ function RoomView({ roomId, count, controller: demo, mode }: Props & { controlle
     {panel === "demo" && mode === "demo" && <Modal title="前端驗收工具" onClose={() => setPanel(null)}>{playerList}<div className="mt-5">{demoControls}</div></Modal>}
     {panel === "rules" && <Modal title="一問一答，找到那個人" onClose={() => setPanel(null)}><p className="text-sm leading-8">每回合選擇口頭提問或指認。提問完按「已完成提問」就會直接換對方；猜錯也會自動換回合，猜中獲勝。蓋牌是你自己的排除筆記，不消耗回合，也能隨時翻回。</p></Modal>}
     {panel === "leave" && <Modal title={lobby ? "要先離開這張遊戲桌嗎？" : "確定離開這一局？"} onClose={() => setPanel(null)}><p className="mb-5 text-sm leading-7">{mode === "demo" ? (lobby ? "展示資料不會保存，回來時將重新開始。" : "正式遊戲主動離開會立即判負。這個展示房間離開後會重設。") : (lobby ? "離開後會立即釋放座位。" : "遊戲中主動離開會立即判負。")}</p><div className="flex justify-end gap-3"><Button tone="secondary" onClick={() => setPanel(null)}>繼續留著</Button>{mode === "demo" ? <Link href="/" className="inline-flex min-h-11 items-center rounded-lg border-2 border-ink bg-danger px-4 text-sm font-bold text-white">確認離開</Link> : <Button tone="danger" disabled={busy} onClick={async () => { if (await demo.leave?.()) router.push("/"); }}>確認離開</Button>}</div></Modal>}
-    {result && !panel && <Modal title="這一局，揭曉了。" onClose={() => setDismissedResult(result.endedAt)}><div className="py-4 text-center"><span className="display-font text-7xl text-orange">{result.winnerUid === uid ? "Bravo!" : "Nice try!"}</span><h2 className="mt-5 text-2xl font-bold">{result.winnerUid === uid ? "恭喜你，猜謎小偵探。" : "好對手，下局再挑戰。"}</h2><p className="mt-3 text-sm text-ink/65">{result.reason === "disconnect_forfeit" ? "對手斷線逾時，本局結束。" : "秘密揭曉，這一局已結束。"}<br />卡組已保留，重新選目標就能再來一局。</p><Button className="mt-6" onClick={() => setDismissedResult(result.endedAt)}>回到大廳 →</Button></div></Modal>}
+    {result && !panel && <Modal title="這一局，揭曉了。" onClose={demo.clearResult}><div className="py-4 text-center"><span className="display-font text-7xl text-orange">{result.winnerUid === uid ? "Bravo!" : "Nice try!"}</span><h2 className="mt-5 text-2xl font-bold">{result.winnerUid === uid ? "恭喜你，猜謎小偵探。" : "好對手，下局再挑戰。"}</h2><p className="mt-3 text-sm text-ink/65">{result.reason === "disconnect_forfeit" ? "對手斷線逾時，本局結束。" : "秘密揭曉，這一局已結束。"}<br />卡組已保留，重新選目標就能再來一局。</p><Button className="mt-6" onClick={demo.clearResult}>回到大廳 →</Button></div></Modal>}
   </main>;
 }

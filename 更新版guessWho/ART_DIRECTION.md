@@ -7,7 +7,7 @@
 - 使用 Next.js App Router、React、TypeScript 與 Tailwind CSS。
 - 使用 Firebase Web SDK 完成匿名登入、取得 ID Token 與 Storage 圖片上傳。
 - 使用 `socket.io-client` 連接獨立 Game Server。
-- Game Server 傳回的 `room:state` 是畫面狀態的唯一依據；React state 只保存彈窗開關、目前聚焦卡片、尚未送出的表單與圖片裁切預覽等暫時 UI 狀態。
+- Game Server 傳回的 `room:state` 是遊戲畫面狀態的唯一依據；一次性的 `game:ended` 只控制結算視窗。React state 只保存這類彈窗、目前聚焦卡片、尚未送出的表單與圖片裁切預覽等暫時 UI 狀態。
 - 前端只送出玩家意圖，不自行決定先手、回合切換、勝負、房主、ready、target 或 `foldedCardIds`。
 - 前端不得直接寫入 Firestore 遊戲資料，也不得取得對手秘密目標或房間密碼。
 - 所有操作都要等待 Socket acknowledgment；成功後以 Server 最新 `room:state` 更新畫面，不做會改變規則結果的樂觀更新。
@@ -226,6 +226,7 @@ apps/web/
 - 蓋牌應像實體桌遊翻下卡片，仍保留編號、姓名或「已蓋牌」文字，且可再次翻回。
 - 猜測是高風險操作，按鈕與二次確認視窗需和一般蓋牌明顯區分。
 - 斷線暫停時顯示剩餘寬限時間，並停用所有遊戲操作。
+- 在線玩家收到一次性的 `game:ended { winnerUid, reason }` 後顯示結算視窗；關閉後只清除 React state，重新整理或重新連線不得從 `room:state` 重播舊結算。
 
 ## 圖片選擇、裁切與顯示
 
@@ -275,6 +276,7 @@ apps/web/
 - 點任何卡片都能在畫面中央看到固定大小的放大圖片，底部操作依 `lobby／playing／paused`、回合與蓋牌狀態正確切換。
 - 放大圖片不能被拖曳、捏合或雙擊改變大小；正式遊戲畫面不因誤觸產生頁面位移或縮放。
 - 指認必須二次確認；蓋牌與翻回要在 Server acknowledgment 後更新，重新整理與重連後仍一致。
+- 猜中或斷線判負時，在線玩家會看到一次結算；關閉後重新整理不會重播，結算送出當下離線的玩家允許看不到。
 - 軟鍵盤、手機網址列、瀏海、動態島與底部系統手勢區不遮住主要操作。
 - 鍵盤可完成開啟卡片、操作、關閉 modal，且焦點順序正確。
 - Retro Design 在關閉 grain、動畫與自訂字型後仍然成立。

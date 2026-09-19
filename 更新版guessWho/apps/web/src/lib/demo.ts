@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Card, CardCount, RetentionPolicy, RoomState } from "@guesswho/shared/game-types";
+import type { Card, CardCount, GameResult, RetentionPolicy, RoomState } from "@guesswho/shared/game-types";
 import type { GameCommand } from "@guesswho/shared/socket-events";
 
 const names = ["阿栗", "小葵", "木木", "大福", "橘子", "阿藍", "米米", "花花", "阿哲", "小夏", "豆豆", "可可", "阿森", "露露", "小麥", "阿莫", "桃子", "阿樂", "小松", "果果", "阿白", "小雨", "茶茶", "阿海", "圓圓"];
@@ -18,7 +18,7 @@ export function initialRoom(roomId: string, count: CardCount, retention: Retenti
       { uid: "host", name: "你", seat: "A", ready: false, connected: true, hasTarget: false, disconnectDeadline: null },
       { uid: "guest", name: "小夥伴", seat: "B", ready: false, connected: true, hasTarget: false, disconnectDeadline: null },
     ], currentTurnUid: null,
-    self: { uid: "host", targetCardId: null, foldedCardIds: [] }, lastResult: null };
+    self: { uid: "host", targetCardId: null, foldedCardIds: [] } };
 }
 
 // 僅供第二階段的本地展示。日後以 Socket acknowledgment / room:state 替換此入口。
@@ -31,6 +31,7 @@ export function useDemoRoom(roomId: string, count: CardCount, retention: Retenti
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [remaining, setRemaining] = useState(60);
+  const [result, setResult] = useState<GameResult | null>(null);
   const privateNotes = useRef<Record<Persona, { target: number | null; folded: number[] }>>({ host: { target: null, folded: [] }, guest: { target: null, folded: [] } });
   const lock = useRef(false);
   const failNext = useRef(false);
@@ -57,11 +58,10 @@ export function useDemoRoom(roomId: string, count: CardCount, retention: Retenti
     : !state.players.find(player => player.uid !== state.hostUid)?.ready ? "等待另一位玩家按下準備"
     : "";
 
-  function finish(current: RoomState, winner: string, reason: "correct_guess" | "disconnect_forfeit"): RoomState {
+  function finish(current: RoomState): RoomState {
     privateNotes.current = { host: { target: null, folded: [] }, guest: { target: null, folded: [] } };
     return { ...current, status: "lobby", currentTurnUid: null,
-      players: current.players.map(player => ({ ...player, ready: false, hasTarget: false, connected: true, disconnectDeadline: null })),
-      lastResult: { winnerUid: winner, reason, endedAt: Date.now() } };
+      players: current.players.map(player => ({ ...player, ready: false, hasTarget: false, connected: true, disconnectDeadline: null })) };
   }
 
   useEffect(() => {
@@ -72,7 +72,8 @@ export function useDemoRoom(roomId: string, count: CardCount, retention: Retenti
       setRemaining(seconds);
       if (seconds === 0) {
         const online = room.players.find(player => player.connected)!;
-        setRoom(current => finish(current, online.uid, "disconnect_forfeit"));
+        setResult({ winnerUid: online.uid, reason: "disconnect_forfeit" });
+        setRoom(current => finish(current));
         setNotice("展示：對手逾時，這一局結束了");
       }
     };
@@ -130,7 +131,7 @@ export function useDemoRoom(roomId: string, count: CardCount, retention: Retenti
         case "game:start":
           requireHost();
           if (startReason) throw new Error(startReason);
-          current.status = "playing"; current.currentTurnUid = uid; current.lastResult = null;
+          current.status = "playing"; current.currentTurnUid = uid;
           setNotice("展示局開始，由你先手"); break;
         case "card:fold-toggle":
           if (current.status !== "playing") throw new Error("目前不能蓋牌");
@@ -145,7 +146,7 @@ export function useDemoRoom(roomId: string, count: CardCount, retention: Retenti
           cardFor(command.payload.cardId);
           // 示範答案只存在 mock 入口，不會放入 RoomState。
           if (command.payload.cardId === privateNotes.current[uid === "host" ? "guest" : "host"].target) {
-            setRoom(finish(current, uid, "correct_guess")); setNotice("猜中了！回到大廳，再來一局。"); return true;
+            setResult({ winnerUid: uid, reason: "correct_guess" }); setRoom(finish(current)); setNotice("猜中了！回到大廳，再來一局。"); return true;
           }
           current.currentTurnUid = uid === "host" ? "guest" : "host";
           setNotice("猜錯了，現在換對方的回合"); break;
@@ -163,14 +164,15 @@ export function useDemoRoom(roomId: string, count: CardCount, retention: Retenti
     if (value === "loading") { setLoading(true); return; }
     if (value === "error") { failNext.current = true; setNotice("下一次操作將示範失敗；重試即可成功"); return; }
     let current = structuredClone(room);
-    current.lastResult = null;
+    setResult(null);
     if (value === "lobby" || value === "win" || value === "lose") {
-      current = finish(current, value === "lose" ? (uid === "host" ? "guest" : "host") : uid, "correct_guess");
-      if (value === "lobby") current.lastResult = null;
+      if (value !== "lobby") setResult({ winnerUid: value === "lose" ? (uid === "host" ? "guest" : "host") : uid, reason: "correct_guess" });
+      current = finish(current);
     } else if (value === "missing") {
       current.status = "lobby"; current.cards[0].imagePath = "";
     } else if (value === "transfer") {
-      current = finish(current, uid, "disconnect_forfeit");
+      setResult({ winnerUid: uid, reason: "disconnect_forfeit" });
+      current = finish(current);
       current.hostUid = uid === "host" ? "guest" : "host";
       setNotice("展示：房主權限已移交，雙方需重新選目標");
     } else {
@@ -204,7 +206,7 @@ export function useDemoRoom(roomId: string, count: CardCount, retention: Retenti
     setRoom(current => ({ ...current, status: "playing", players: current.players.map(player => ({ ...player, connected: true, disconnectDeadline: null })) }));
     setNotice("展示：已重連，回合、目標與蓋牌保留");
   }
-  return { state, uid, isHost, me, busy, loading, error, notice, remaining, startReason, send, scenario, preparePartner, fillSamples, reconnect,
+  return { state, uid, isHost, me, busy, loading, error, notice, remaining, result, startReason, send, scenario, preparePartner, fillSamples, reconnect,
     switchPersona: (next: Persona) => { if (!busy) { setUid(next); setError(""); setNotice(""); } },
-    clearError: () => setError("") };
+    clearResult: () => setResult(null), clearError: () => setError("") };
 }

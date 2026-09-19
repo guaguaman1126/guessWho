@@ -89,6 +89,7 @@ async function load(transaction: Transaction, roomRef: DocumentReference, roomId
 }
 
 function fromSnapshots(roomId: string, room: RoomRecord, players: PlayerRecord[], targets: [string, number][], cards: Card[], password: string | null): RoomAggregate {
+  delete (room as RoomRecord & { lastResult?: unknown }).lastResult;
   return { roomId, room, players, targets: Object.fromEntries(targets), cards: cards.sort((a, b) => a.id - b.id), password };
 }
 

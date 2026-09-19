@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { deleteObject, ref, uploadBytes } from "firebase/storage";
-import type { Acknowledgment, RoomState } from "@guesswho/shared/game-types";
+import type { Acknowledgment, GameResult, RoomState } from "@guesswho/shared/game-types";
 import type { GameCommand } from "@guesswho/shared/socket-events";
 import { authenticatedSocket, getFirebase, imageUrl, roomPasswordKey } from "./firebase-client";
 
@@ -21,10 +21,12 @@ export function useLiveRoom(roomId: string) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [remaining, setRemaining] = useState(60);
+  const [result, setResult] = useState<GameResult | null>(null);
   const socketRef = useRef<LooseSocket | null>(null);
 
   useEffect(() => {
     let active = true;
+    setResult(null);
     void authenticatedSocket().then(socket => {
       if (!active) { socket.disconnect(); return; }
       const loose = socket as unknown as LooseSocket;
@@ -36,6 +38,7 @@ export function useLiveRoom(roomId: string) {
         if (!active) return;
         setUid(next.self.uid); setState({ ...next, cards }); setLoading(false); setError("");
       });
+      socket.on("game:ended", next => { if (active) setResult(next); });
       const join = () => loose.emit("room:join", { roomId, password: sessionStorage.getItem(roomPasswordKey(roomId)) ?? undefined }, result => {
         if (!result.ok) { setError(result.error); setLoading(false); }
       });
@@ -96,5 +99,5 @@ export function useLiveRoom(roomId: string) {
     return "";
   }, [state]);
 
-  return { state, uid, isHost, me, busy, loading, error, notice, remaining, startReason, send, uploadCardImage, leave, clearError: () => setError("") };
+  return { state, uid, isHost, me, busy, loading, error, notice, remaining, result, startReason, send, uploadCardImage, leave, clearResult: () => setResult(null), clearError: () => setError("") };
 }

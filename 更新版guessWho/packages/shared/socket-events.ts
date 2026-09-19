@@ -1,4 +1,4 @@
-import type { Acknowledgment, CardCount, RetentionPolicy, RoomState } from "./game-types.js";
+import type { Acknowledgment, CardCount, GameResult, RetentionPolicy, RoomState } from "./game-types.js";
 export interface CommandPayloads {
   "room:create": { cardCount: CardCount; retentionPolicy: RetentionPolicy; password?: string };
   "room:join": { roomId: string; password?: string };
@@ -13,5 +13,5 @@ export interface CommandPayloads {
   "card:fold-toggle": { cardId: number };
 }
 export type ClientEvents = { [K in keyof CommandPayloads]: (payload: CommandPayloads[K], ack: (result: Acknowledgment) => void) => void };
-export interface ServerEvents { "room:state": (state: RoomState) => void; "room:error": (message: string) => void }
+export interface ServerEvents { "room:state": (state: RoomState) => void; "room:error": (message: string) => void; "game:ended": (result: GameResult) => void }
 export type GameCommand = { [K in keyof CommandPayloads]: { type: K; payload: CommandPayloads[K] } }[keyof CommandPayloads];

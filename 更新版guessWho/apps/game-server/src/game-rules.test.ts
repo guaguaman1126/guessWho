@@ -61,9 +61,9 @@ test("蓋牌會保存，猜錯自動換回合，猜中回大廳", () => {
   assert.deepEqual(toRoomState(room, "host").self.foldedCardIds, [2]);
   applyCommand(room, "host", { type: "game:guess", payload: { cardId: 2 } }, 8);
   assert.equal(room.room.currentTurnUid, "guest");
-  applyCommand(room, "guest", { type: "game:guess", payload: { cardId: 1 } }, 9);
+  const result = applyCommand(room, "guest", { type: "game:guess", payload: { cardId: 1 } }, 9);
   assert.equal(room.room.status, "lobby");
-  assert.equal(room.room.lastResult?.winnerUid, "guest");
+  assert.deepEqual(result.gameEnded, { winnerUid: "guest", reason: "correct_guess" });
   assert.deepEqual(room.targets, {});
 });
 
@@ -72,8 +72,8 @@ test("斷線保留座位，逾時判負並移交房主", () => {
   applyCommand(room, "host", { type: "game:start", payload: {} }, 6, () => 0);
   disconnectPlayer(room, "host", 10, 60_000);
   assert.equal(room.room.status, "paused");
-  removePlayer(room, "host", 70_001, true);
+  const result = removePlayer(room, "host", 70_001, true);
   assert.equal(room.room.hostUid, "guest");
-  assert.equal(room.room.lastResult?.winnerUid, "guest");
+  assert.deepEqual(result.gameEnded, { winnerUid: "guest", reason: "disconnect_forfeit" });
   assert.equal(room.room.status, "lobby");
 });

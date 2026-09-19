@@ -9,7 +9,6 @@ export type RoomRecord = {
   cardCount: CardCount;
   retentionPolicy: RetentionPolicy;
   currentTurnUid: string | null;
-  lastResult: GameResult | null;
   lastEnteredAt: number;
   emptySince: number | null;
   createdAt: number;
@@ -37,6 +36,7 @@ export type RoomAggregate = {
 export type MutationResult = {
   deleteRoom?: boolean;
   imagePathsToDelete?: string[];
+  gameEnded?: GameResult;
 };
 
 const validCounts = new Set<CardCount>([9, 16, 25]);
@@ -49,7 +49,7 @@ export function createRoom(roomId: string, uid: string, cardCount: CardCount, re
   if (retentionPolicy === "retain" && !cleanPassword) fail("保留房間必須設定密碼");
   return {
     roomId,
-    room: { status: "lobby", hostUid: uid, playerUids: [uid], cardCount, retentionPolicy, currentTurnUid: null, lastResult: null, lastEnteredAt: now, emptySince: null, createdAt: now, updatedAt: now },
+    room: { status: "lobby", hostUid: uid, playerUids: [uid], cardCount, retentionPolicy, currentTurnUid: null, lastEnteredAt: now, emptySince: null, createdAt: now, updatedAt: now },
     players: [{ uid, seat: "A", ready: false, connected: true, disconnectDeadline: null, foldedCardIds: [] }],
     targets: {},
     cards: Array.from({ length: cardCount }, (_, index) => ({ id: index + 1, name: "", imagePath: "" })),
@@ -146,7 +146,6 @@ export function applyCommand(state: RoomAggregate, uid: string, command: GameCom
       if (!guest?.ready) fail("等待另一位玩家按下準備");
       state.room.status = "playing";
       state.room.currentTurnUid = state.players[chooseFirst(state.players.length)]!.uid;
-      state.room.lastResult = null;
       break;
     }
     case "turn:question-complete": {
@@ -158,7 +157,7 @@ export function applyCommand(state: RoomAggregate, uid: string, command: GameCom
       requireTurn(state, uid);
       requireCard(command.payload.cardId);
       const opponent = otherPlayer(state, uid);
-      if (state.targets[opponent.uid] === command.payload.cardId) finishGame(state, uid, "correct_guess", now);
+      if (state.targets[opponent.uid] === command.payload.cardId) result.gameEnded = finishGame(state, uid, "correct_guess");
       else {
         state.room.currentTurnUid = opponent.uid;
       }
@@ -192,8 +191,9 @@ export function removePlayer(state: RoomAggregate, uid: string, now: number, exp
   const player = state.players.find(item => item.uid === uid);
   if (!player) return {};
   if (expiredOnly && (player.connected || player.disconnectDeadline === null || player.disconnectDeadline > now)) return {};
+  const result: MutationResult = {};
   const opponent = state.players.find(item => item.uid !== uid && item.connected);
-  if ((state.room.status === "playing" || state.room.status === "paused") && opponent) finishGame(state, opponent.uid, "disconnect_forfeit", now);
+  if ((state.room.status === "playing" || state.room.status === "paused") && opponent) result.gameEnded = finishGame(state, opponent.uid, "disconnect_forfeit");
   state.players = state.players.filter(item => item.uid !== uid);
   delete state.targets[uid];
   if (state.room.hostUid === uid) {
@@ -202,7 +202,7 @@ export function removePlayer(state: RoomAggregate, uid: string, now: number, exp
     if (newHost) newHost.ready = false;
   }
   if (state.players.length === 0) {
-    if (state.room.retentionPolicy === "delete_when_empty") return { deleteRoom: true, imagePathsToDelete: state.cards.map(card => card.imagePath).filter(Boolean) };
+    if (state.room.retentionPolicy === "delete_when_empty") return { ...result, deleteRoom: true, imagePathsToDelete: state.cards.map(card => card.imagePath).filter(Boolean) };
     state.room.status = "lobby";
     state.room.currentTurnUid = null;
     state.room.emptySince = now;
@@ -210,7 +210,7 @@ export function removePlayer(state: RoomAggregate, uid: string, now: number, exp
     state.targets = {};
   }
   touch(state, now);
-  return {};
+  return result;
 }
 
 export function toRoomState(state: RoomAggregate, uid: string): RoomState {
@@ -233,19 +233,18 @@ export function toRoomState(state: RoomAggregate, uid: string): RoomState {
     })),
     currentTurnUid: state.room.currentTurnUid,
     self: { uid, targetCardId: state.targets[uid] ?? null, foldedCardIds: [...state.players.find(item => item.uid === uid)!.foldedCardIds] },
-    lastResult: state.room.lastResult,
   };
 }
 
-function finishGame(state: RoomAggregate, winnerUid: string, reason: GameResult["reason"], now: number): void {
+function finishGame(state: RoomAggregate, winnerUid: string, reason: GameResult["reason"]): GameResult {
   state.room.status = "lobby";
   state.room.currentTurnUid = null;
-  state.room.lastResult = { winnerUid, reason, endedAt: now };
   state.targets = {};
   for (const player of state.players) {
     player.ready = false;
     player.foldedCardIds = [];
   }
+  return { winnerUid, reason };
 }
 
 function requirePlayer(state: RoomAggregate, uid: string): PlayerRecord {

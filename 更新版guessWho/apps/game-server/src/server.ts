@@ -4,7 +4,7 @@ import { pathToFileURL } from "node:url";
 import express from "express";
 import { OAuth2Client } from "google-auth-library";
 import { Server } from "socket.io";
-import type { Acknowledgment } from "@guesswho/shared/game-types";
+import type { Acknowledgment, GameResult } from "@guesswho/shared/game-types";
 import type { ClientEvents, CommandPayloads, GameCommand, ServerEvents } from "@guesswho/shared/socket-events";
 import { auth, createAggregate, deleteImages, deleteRoomImages, listRooms, readAggregate, updateAggregate } from "./firebase-admin.js";
 import { applyCommand, createRoom, disconnectPlayer, joinRoom, removePlayer, toRoomState } from "./game-rules.js";
@@ -47,7 +47,7 @@ export function createGameServer() {
         const roomId = currentRoom(socket);
         const { value } = await updateAggregate(roomId, state => applyCommand(state, uid, { type, payload } as GameCommand, Date.now()));
         await deleteImages(value.imagePathsToDelete);
-        await broadcast(roomId);
+        await broadcast(roomId, value.gameEnded);
         return { ok: true } as const;
       }, ack);
     };
@@ -83,7 +83,7 @@ export function createGameServer() {
       leaveSocket(socket, roomId, uid, sockets);
       clearExpiry(roomId, uid, expiryTimers);
       if (value.deleteRoom) await deleteRoomImages(roomId);
-      else await broadcast(roomId);
+      else await broadcast(roomId, value.gameEnded);
       return { ok: true } as const;
     }, ack));
 
@@ -111,7 +111,7 @@ export function createGameServer() {
     });
   });
 
-  async function broadcast(roomId: string): Promise<void> {
+  async function broadcast(roomId: string, gameEnded?: GameResult): Promise<void> {
     const state = await readAggregate(roomId);
     if (!state) return;
     const roomSockets = sockets.get(roomId);
@@ -119,7 +119,11 @@ export function createGameServer() {
     for (const [receiverUid, ids] of roomSockets) {
       let safeState;
       try { safeState = toRoomState(state, receiverUid); } catch { continue; }
-      for (const id of ids) io.to(id).emit("room:state", safeState);
+      for (const id of ids) {
+        io.to(id).emit("room:state", safeState);
+        // ponytail: 結算只通知目前在線的 Socket；若日後需要補送，再改成持久化結果。
+        if (gameEnded) io.to(id).emit("game:ended", gameEnded);
+      }
     }
   }
 
@@ -130,7 +134,7 @@ export function createGameServer() {
       const { value } = await updateAggregate(roomId, state => removePlayer(state, uid, Date.now(), true));
       expiryTimers.delete(key);
       if (value.deleteRoom) await deleteRoomImages(roomId);
-      else await broadcast(roomId);
+      else await broadcast(roomId, value.gameEnded);
       return { ok: true } as const;
     }), graceMs + 25));
   }

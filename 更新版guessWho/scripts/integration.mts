@@ -3,7 +3,7 @@ import { getApp, initializeApp } from "firebase/app";
 import { connectAuthEmulator, getAuth, signInAnonymously, type User } from "firebase/auth";
 import { connectStorageEmulator, getStorage, ref, uploadBytes } from "firebase/storage";
 import { io, type Socket } from "socket.io-client";
-import type { Acknowledgment, RoomState } from "@guesswho/shared/game-types";
+import type { Acknowledgment, GameResult, RoomState } from "@guesswho/shared/game-types";
 
 process.env.FIREBASE_PROJECT_ID = "demo-guesswho";
 process.env.FIREBASE_STORAGE_BUCKET = "demo-guesswho.firebasestorage.app";
@@ -15,6 +15,7 @@ const { createGameServer } = await import("../apps/game-server/src/server.js");
 const { db, bucket, readAggregate } = await import("../apps/game-server/src/firebase-admin.js");
 const config = { apiKey: "demo", projectId: "demo-guesswho", storageBucket: "demo-guesswho.firebasestorage.app", appId: "demo" };
 const latest = new Map<Socket, RoomState>();
+const results = new Map<Socket, GameResult>();
 let game = createGameServer();
 await game.ready;
 await listen(game.httpServer, 0);
@@ -38,7 +39,7 @@ try {
     await uploadBytes(ref(host.storage, path), jpeg, { contentType: "image/jpeg" });
     assert.equal((await emit(host.socket, "card:update", { cardId, name: `角色 ${cardId}`, imagePath: path })).ok, true);
   }
-  assert.equal((await emit(guest.socket, "card:update", { cardId: 1, name: "作弊" })).ok, false);
+  assert.equal((await emit(guest.socket, "card:update", { cardId: 1, name: "玩家編輯" })).ok, true);
   assert.equal((await emit(host.socket, "target:select", { cardId: 1 })).ok, true);
   assert.equal((await emit(guest.socket, "target:select", { cardId: 3 })).ok, true);
   assert.equal((await emit(guest.socket, "player:ready", { ready: true })).ok, true);
@@ -77,9 +78,10 @@ try {
 
   host.socket.disconnect();
   await state(guest.socket, value => value.status === "paused");
-  const forfeited = await state(guest.socket, value => value.status === "lobby" && value.lastResult?.reason === "disconnect_forfeit", 5_000);
+  const forfeited = await state(guest.socket, value => value.status === "lobby", 5_000);
+  const forfeitResult = await gameEnded(guest.socket, value => value.reason === "disconnect_forfeit");
   assert.equal(forfeited.hostUid, guest.user.uid);
-  assert.equal(forfeited.lastResult?.winnerUid, guest.user.uid);
+  assert.equal(forfeitResult.winnerUid, guest.user.uid);
   assert.equal((await emit(guest.socket, "room:leave", {})).ok, true);
   assert.equal(await readAggregate(roomId), null);
   assert.equal((await bucket.getFiles({ prefix: `rooms/${roomId}/` }))[0].length, 0);
@@ -112,6 +114,7 @@ async function client(name: string) {
 async function socketFor(user: User): Promise<Socket> {
   const socket = io(`http://127.0.0.1:${port}`, { auth: { token: await user.getIdToken() }, reconnection: false });
   socket.on("room:state", value => latest.set(socket, value));
+  socket.on("game:ended", value => results.set(socket, value));
   await new Promise<void>((resolve, reject) => { socket.once("connect", () => resolve()); socket.once("connect_error", reject); });
   return socket;
 }
@@ -129,6 +132,15 @@ async function state(socket: Socket, predicate: (value: RoomState) => boolean, t
     const timer = setTimeout(() => { socket.off("room:state", listener); reject(new Error("room:state timeout")); }, timeout);
     const listener = (value: RoomState) => { latest.set(socket, value); if (predicate(value)) { clearTimeout(timer); socket.off("room:state", listener); resolve(value); } };
     socket.on("room:state", listener);
+  });
+}
+
+async function gameEnded(socket: Socket, predicate: (value: GameResult) => boolean, timeout = 5_000): Promise<GameResult> {
+  const existing = results.get(socket); if (existing && predicate(existing)) return existing;
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { socket.off("game:ended", listener); reject(new Error("game:ended timeout")); }, timeout);
+    const listener = (value: GameResult) => { results.set(socket, value); if (predicate(value)) { clearTimeout(timer); socket.off("game:ended", listener); resolve(value); } };
+    socket.on("game:ended", listener);
   });
 }
 
