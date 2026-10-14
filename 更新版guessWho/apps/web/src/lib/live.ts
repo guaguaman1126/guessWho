@@ -5,6 +5,7 @@ import { deleteObject, ref, uploadBytes } from "firebase/storage";
 import type { Acknowledgment, GameResult, RoomState } from "@guesswho/shared/game-types";
 import type { GameCommand } from "@guesswho/shared/socket-events";
 import { authenticatedSocket, getFirebase, imageUrl, roomPasswordKey } from "./firebase-client";
+import { createRoomImageResolver } from "./room-images";
 
 type LooseSocket = {
   connected: boolean;
@@ -26,6 +27,7 @@ export function useLiveRoom(roomId: string) {
 
   useEffect(() => {
     let active = true;
+    const images = createRoomImageResolver(imageUrl);
     setResult(null);
     void authenticatedSocket().then(socket => {
       if (!active) { socket.disconnect(); return; }
@@ -34,9 +36,9 @@ export function useLiveRoom(roomId: string) {
       loose.on("connect_error", (cause: unknown) => { setError(cause instanceof Error ? cause.message : "連線失敗"); setLoading(false); });
       socket.on("room:error", message => setError(message));
       socket.on("room:state", async next => {
-        const cards = await Promise.all(next.cards.map(async card => ({ ...card, imagePath: await imageUrl(card.imagePath).catch(() => "") })));
-        if (!active) return;
-        setUid(next.self.uid); setState({ ...next, cards }); setLoading(false); setError("");
+        const resolved = await images.resolve(next);
+        if (!active || !resolved) return;
+        setUid(next.self.uid); setState(resolved); setLoading(false); setError("");
       });
       socket.on("game:ended", next => { if (active) setResult(next); });
       const join = () => loose.emit("room:join", { roomId, password: sessionStorage.getItem(roomPasswordKey(roomId)) ?? undefined }, result => {
@@ -44,7 +46,7 @@ export function useLiveRoom(roomId: string) {
       });
       if (loose.connected) join(); else loose.on("connect", join);
     }).catch(cause => { setError(cause instanceof Error ? cause.message : "無法登入"); setLoading(false); });
-    return () => { active = false; socketRef.current?.disconnect(); socketRef.current = null; };
+    return () => { active = false; images.dispose(); socketRef.current?.disconnect(); socketRef.current = null; };
   }, [roomId]);
 
   useEffect(() => {
