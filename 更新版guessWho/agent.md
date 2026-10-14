@@ -100,6 +100,10 @@ Game Server 是唯一裁判，負責：
 
 Game Server 重啟或 Socket.IO 重新連線時，必須從 Firestore 恢復狀態，不能依賴記憶體中的房間資料。
 
+效能實作可以快取卡組，但快取只是可重建的衍生資料：每次遊戲操作仍在 transaction 讀取房間、玩家和目標，並以房間的 `deckVersion` 驗證卡組版本。卡組變更和版本遞增必須同筆提交；交易成功後才更新快取與廣播。沒有版本的舊房間視為 `0`。非卡組操作只寫入實際變更的文件，不讀取或改寫密碼；加入房間仍讀取密碼驗證。最後一條連線離開、刪房和關機時清除快取。
+
+廣播直接使用已提交交易回傳的完整狀態，不另行讀庫。同房間的交易、連線名單變更與廣播須依序執行，斷線工作執行時再次確認有無其他連線，避免舊狀態覆蓋重新加入結果。此設計沿用單一 Game Server instance 的限制。
+
 ## 最小 Firestore 結構
 
 ```text
@@ -114,6 +118,7 @@ rooms/{roomId}
   emptySince
   createdAt
   updatedAt
+  deckVersion: number  # 卡組內容或張數變更時遞增；舊資料缺少時為 0
 
 rooms/{roomId}/players/{uid}
   seat: A | B

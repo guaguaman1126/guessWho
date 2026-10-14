@@ -13,6 +13,7 @@ export type RoomRecord = {
   emptySince: number | null;
   createdAt: number;
   updatedAt: number;
+  deckVersion: number;
 };
 
 export type PlayerRecord = {
@@ -49,7 +50,7 @@ export function createRoom(roomId: string, uid: string, cardCount: CardCount, re
   if (retentionPolicy === "retain" && !cleanPassword) fail("保留房間必須設定密碼");
   return {
     roomId,
-    room: { status: "lobby", hostUid: uid, playerUids: [uid], cardCount, retentionPolicy, currentTurnUid: null, lastEnteredAt: now, emptySince: null, createdAt: now, updatedAt: now },
+    room: { status: "lobby", hostUid: uid, playerUids: [uid], cardCount, retentionPolicy, currentTurnUid: null, lastEnteredAt: now, emptySince: null, createdAt: now, updatedAt: now, deckVersion: 0 },
     players: [{ uid, seat: "A", ready: false, connected: true, disconnectDeadline: null, foldedCardIds: [] }],
     targets: {},
     cards: Array.from({ length: cardCount }, (_, index) => ({ id: index + 1, name: "", imagePath: "" })),

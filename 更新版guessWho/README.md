@@ -68,16 +68,31 @@ npm run dev
 ```powershell
 npm run typecheck
 npm run test
+npm run test:web
 npm run test:rules
 npm run test:integration
 npm run build
 ```
 
 - `test`：純遊戲規則，涵蓋房主開始、秘密隔離、縮減卡組、蓋牌、猜測與逾時移交。
+- `test` 另包含卡組快取、交易失敗／重試、實際讀寫路徑與同房間操作佇列測試。
+- `test:web`：圖片網址快取、請求合併、失敗重試與過期畫面更新保護。
 - `test:rules`：Firestore 全面拒絕 Web Client；Storage 只允許大廳房主上傳最大 `5 MB` 的 JPEG。
 - `test:integration`：真實 Auth／Firestore／Storage Emulator 加上 Socket.IO，涵蓋兩人加入、第三人拒絕、權限、秘密資料、重連、Server 重啟、逾時判負、空房刪除、密碼與閒置清理。
 
 第一次執行 Emulator 測試時，Firebase CLI 會下載官方 Firestore 與 Storage Emulator 元件。
+
+## 操作延遲與快取
+
+前端每次進入房間建立一份圖片網址快取。相同 Storage 路徑共用網址與進行中的請求，替換圖片的 UUID 路徑才觸發新請求；失敗可重試，離開頁面即清除。較早的圖片請求晚完成時，不會覆蓋較新的房間狀態。
+
+Game Server 每次仍在 Firestore transaction 讀取房間、玩家與秘密目標，並等待成功提交後才廣播。卡組是可重建的記憶體快取，以房間文件的 `deckVersion` 驗證；修改卡組時連同版本一起提交。舊房間沒有版本欄位時視為 `0`，不用搬移資料。暖機後兩人遊戲的蓋牌讀取 5 份動態文件、通常只寫入房間和自己的玩家文件，不讀密碼、不重寫卡片，也不在廣播前重讀房間。
+
+同房間的交易、連線名單更新與廣播依序處理，不同房間可並行。最後一條連線離開、刪除房間或伺服器關閉時清除卡組快取；重新加入與重啟都能從 Firestore 重建。此機制維持目前單一 Game Server instance 的部署前提，不支援直接在 Console 修改卡片而不更新 `deckVersion`。
+
+設定 Game Server 的 `GAME_PERF_LOG=true` 可記錄 `game-perf` JSON 診斷；預設不輸出。記錄事件名稱、`queueMs`、`loadMs`、`ruleMs`、`transactionMs`、`attempts`／`retries`、`readDocuments`／`writeDocuments`、`cardReads`／`secretReads`、`cacheHit` 與 `ok`，不記錄房間內容、密碼、玩家目標或 token。讀寫計數累計交易嘗試，屬診斷操作數而非 Firebase 計費報表；`transactionMs` 包含讀取、規則及提交等待，不能將它與其他耗時相加。
+
+整合測試明確使用 `--project demo-guesswho`，不受 Firebase CLI 當前選用的正式專案別名影響。測試包含暖機後各 10 次蓋牌／翻回的中位數與最大值；這是本機 Emulator 數據，不等同正式站延遲。部署後仍需用瀏覽器網路紀錄確認未更換圖片的操作新增網址請求為 0，再比較 Socket 回覆時間。
 
 ## 正式 Firebase 設定
 
@@ -141,7 +156,9 @@ NEXT_PUBLIC_GAME_SERVER_URL
 | `apps/web/src/lib/firebase-client.ts` | 匿名登入及 Firebase Client 初始化 |
 | `apps/web/src/lib/demo.ts` | 可獨立使用的單機展示資料 |
 | `apps/game-server/src/game-rules.ts` | 純遊戲規則與安全狀態輸出 |
-| `apps/game-server/src/firebase-admin.ts` | Firestore transaction 與 Storage 清理 |
+| `apps/game-server/src/firebase-admin.ts` | Firebase 初始化、完整狀態讀取與 Storage 清理 |
+| `apps/game-server/src/room-store.ts` | 交易讀寫差異、卡組版本與可重建快取 |
+| `apps/game-server/src/room-queue.ts` | 同房間操作順序與排隊診斷 |
 | `apps/game-server/src/server.ts` | Token 驗證、Socket 事件、斷線與每日清理端點 |
 | `firebase/firestore.rules` | 禁止 Web Client 直接存取遊戲狀態 |
 | `firebase/storage.rules` | 房主、大廳、路徑、MIME 與大小限制 |

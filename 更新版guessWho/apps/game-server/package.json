@@ -7,7 +7,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/game-rules.test.ts",
+    "test": "tsx --test src/*.test.ts",
     "start": "node dist/server.js"
   },
   "dependencies": {

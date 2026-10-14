@@ -6,8 +6,10 @@ import { OAuth2Client } from "google-auth-library";
 import { Server } from "socket.io";
 import type { Acknowledgment, GameResult } from "@guesswho/shared/game-types";
 import type { ClientEvents, CommandPayloads, GameCommand, ServerEvents } from "@guesswho/shared/socket-events";
-import { auth, createAggregate, deleteImages, deleteRoomImages, listRooms, readAggregate, updateAggregate } from "./firebase-admin.js";
-import { applyCommand, createRoom, disconnectPlayer, joinRoom, removePlayer, toRoomState } from "./game-rules.js";
+import { auth, db, deleteImages, deleteRoomImages, listRooms } from "./firebase-admin.js";
+import { applyCommand, createRoom, disconnectPlayer, joinRoom, removePlayer, toRoomState, type RoomAggregate } from "./game-rules.js";
+import { createRoomStore } from "./room-store.js";
+import { createRoomQueue } from "./room-queue.js";
 
 const roomIdPattern = /^[A-Z0-9]{6}$/;
 const graceMs = Number(process.env.DISCONNECT_GRACE_MS ?? 60_000);
@@ -21,6 +23,31 @@ export function createGameServer() {
   const expiryTimers = new Map<string, ReturnType<typeof setTimeout>>();
   const oauth = new OAuth2Client();
   let shuttingDown = false;
+  const store = createRoomStore(db);
+  const queue = createRoomQueue();
+  const { createAggregate, updateAggregate } = store;
+
+  function inRoom<T>(roomId: string, event: string, work: () => Promise<T>): Promise<T> {
+    if (shuttingDown) return Promise.reject(new Error("伺服器正在關閉"));
+    return queue.run(roomId, event, async () => {
+      try { return await work(); }
+      finally { if (!sockets.has(roomId)) store.forgetDeck(roomId); }
+    });
+  }
+
+  async function attach(socket: Parameters<typeof enterSocket>[0] & { connected: boolean }, state: RoomAggregate, uid: string): Promise<RoomAggregate> {
+    if (socket.connected) {
+      await enterSocket(socket, state.roomId, uid, sockets);
+      clearExpiry(state.roomId, uid, expiryTimers);
+      if (socket.connected) return state;
+      leaveSocket(socket, state.roomId, uid, sockets);
+    }
+    // The connection may disappear while join/create waits for Firestore.
+    if (hasSocket(state.roomId, uid, sockets)) return state;
+    const updated = await updateAggregate(state.roomId, current => disconnectPlayer(current, uid, Date.now(), graceMs), { event: "room:attach-disconnected" });
+    scheduleExpiry(state.roomId, uid);
+    return updated.state;
+  }
 
   app.disable("x-powered-by");
   app.get("/health", (_req, res) => res.json({ ok: true, stage: "ready", gameReady: true }));
@@ -45,10 +72,14 @@ export function createGameServer() {
       void handle(async () => {
         validateObject(payload);
         const roomId = currentRoom(socket);
-        const { value } = await updateAggregate(roomId, state => applyCommand(state, uid, { type, payload } as GameCommand, Date.now()));
-        await deleteImages(value.imagePathsToDelete);
-        await broadcast(roomId, value.gameEnded);
-        return { ok: true } as const;
+        return inRoom(roomId, type, async () => {
+          if (currentRoom(socket) !== roomId) throw new Error("請先加入房間");
+          const gameplay = type !== "card:update" && type !== "room:update-settings";
+          const { value, state } = await updateAggregate(roomId, current => applyCommand(current, uid, { type, payload } as GameCommand, Date.now()), { gameplay, event: type });
+          await deleteImages(value.imagePathsToDelete);
+          broadcast(state, value.gameEnded);
+          return { ok: true } as const;
+        });
       }, ack);
     };
 
@@ -58,33 +89,40 @@ export function createGameServer() {
       for (let attempt = 0; attempt < 5; attempt += 1) {
         roomId = randomBytes(5).toString("base64url").replace(/[-_]/g, "").slice(0, 6).toUpperCase();
         if (roomId.length !== 6) continue;
-        try { await createAggregate(createRoom(roomId, uid, payload.cardCount, payload.retentionPolicy, payload.password, Date.now())); break; }
+        try {
+          return await inRoom(roomId, "room:create", async () => {
+            const state = await createAggregate(createRoom(roomId, uid, payload.cardCount, payload.retentionPolicy, payload.password, Date.now()));
+            broadcast(await attach(socket, state, uid));
+            return { ok: true, roomId } as const;
+          });
+        }
         catch (cause) { if (!(cause instanceof Error) || cause.message !== "ROOM_ID_COLLISION") throw cause; roomId = ""; }
       }
-      if (!roomId) throw new Error("暫時無法建立房間，請再試一次");
-      await enterSocket(socket, roomId, uid, sockets);
-      await broadcast(roomId);
-      return { ok: true, roomId } as const;
+      throw new Error("暫時無法建立房間，請再試一次");
     }, ack));
 
     socket.on("room:join", (payload, ack) => void handle(async () => {
       validateObject(payload);
       const roomId = normalizeRoomId(payload.roomId);
-      await updateAggregate(roomId, state => joinRoom(state, uid, payload.password, Date.now()));
-      await enterSocket(socket, roomId, uid, sockets);
-      clearExpiry(roomId, uid, expiryTimers);
-      await broadcast(roomId);
-      return { ok: true, roomId } as const;
+      return inRoom(roomId, "room:join", async () => {
+        if (socket.data.roomId && socket.data.roomId !== roomId) throw new Error("請先離開目前房間");
+        const { state } = await updateAggregate(roomId, current => joinRoom(current, uid, payload.password, Date.now()), { event: "room:join" });
+        broadcast(await attach(socket, state, uid));
+        return { ok: true, roomId } as const;
+      });
     }, ack));
 
     socket.on("room:leave", (_payload, ack) => void handle(async () => {
       const roomId = currentRoom(socket);
-      const { value } = await updateAggregate(roomId, state => removePlayer(state, uid, Date.now(), false));
-      leaveSocket(socket, roomId, uid, sockets);
-      clearExpiry(roomId, uid, expiryTimers);
-      if (value.deleteRoom) await deleteRoomImages(roomId);
-      else await broadcast(roomId, value.gameEnded);
-      return { ok: true } as const;
+      return inRoom(roomId, "room:leave", async () => {
+        if (currentRoom(socket) !== roomId) throw new Error("請先加入房間");
+        const { value, state } = await updateAggregate(roomId, current => removePlayer(current, uid, Date.now(), false), { event: "room:leave" });
+        leaveSocket(socket, roomId, uid, sockets);
+        clearExpiry(roomId, uid, expiryTimers);
+        if (value.deleteRoom) await deleteRoomImages(roomId);
+        else broadcast(state, value.gameEnded);
+        return { ok: true } as const;
+      });
     }, ack));
 
     socket.on("room:update-settings", (payload, ack) => run("room:update-settings", payload, ack));
@@ -100,21 +138,20 @@ export function createGameServer() {
       if (shuttingDown) return;
       const roomId = socket.data.roomId as string | undefined;
       if (!roomId) return;
-      leaveSocket(socket, roomId, uid, sockets);
-      if (hasSocket(roomId, uid, sockets)) return;
-      void handle(async () => {
-        await updateAggregate(roomId, state => disconnectPlayer(state, uid, Date.now(), graceMs));
-        await broadcast(roomId);
+      void handle(() => inRoom(roomId, "disconnect", async () => {
+        if (socket.data.roomId !== roomId) return { ok: true } as const;
+        leaveSocket(socket, roomId, uid, sockets);
+        if (hasSocket(roomId, uid, sockets)) return { ok: true } as const;
+        const { state } = await updateAggregate(roomId, current => disconnectPlayer(current, uid, Date.now(), graceMs), { event: "disconnect" });
+        broadcast(state);
         scheduleExpiry(roomId, uid);
         return { ok: true } as const;
-      });
+      }));
     });
   });
 
-  async function broadcast(roomId: string, gameEnded?: GameResult): Promise<void> {
-    const state = await readAggregate(roomId);
-    if (!state) return;
-    const roomSockets = sockets.get(roomId);
+  function broadcast(state: RoomAggregate, gameEnded?: GameResult): void {
+    const roomSockets = sockets.get(state.roomId);
     if (!roomSockets) return;
     for (const [receiverUid, ids] of roomSockets) {
       let safeState;
@@ -130,13 +167,28 @@ export function createGameServer() {
   function scheduleExpiry(roomId: string, uid: string): void {
     clearExpiry(roomId, uid, expiryTimers);
     const key = `${roomId}:${uid}`;
-    expiryTimers.set(key, setTimeout(() => void handle(async () => {
-      const { value } = await updateAggregate(roomId, state => removePlayer(state, uid, Date.now(), true));
+    const timer = setTimeout(() => void handle(() => inRoom(roomId, "room:expire", async () => {
+      if (expiryTimers.get(key) !== timer) return { ok: true } as const;
+      const { value, state } = await updateAggregate(roomId, current => removePlayer(current, uid, Date.now(), true), { event: "room:expire" });
       expiryTimers.delete(key);
       if (value.deleteRoom) await deleteRoomImages(roomId);
-      else await broadcast(roomId, value.gameEnded);
+      else broadcast(state, value.gameEnded);
       return { ok: true } as const;
-    }), graceMs + 25));
+    })), graceMs + 25);
+    expiryTimers.set(key, timer);
+  }
+
+  async function cleanupExpiredRooms(): Promise<number> {
+    const cutoff = Date.now() - cleanupAgeMs;
+    const expired = (await listRooms()).filter(state => state.room.retentionPolicy === "retain" && state.room.lastEnteredAt <= cutoff);
+    let deleted = 0;
+    for (const room of expired) {
+      await inRoom(room.roomId, "room:cleanup", async () => {
+        const { value } = await updateAggregate(room.roomId, current => ({ deleteRoom: current.room.retentionPolicy === "retain" && current.room.lastEnteredAt <= cutoff }), { event: "room:cleanup" });
+        if (value.deleteRoom) { await deleteRoomImages(room.roomId); deleted++; }
+      });
+    }
+    return deleted;
   }
 
   const ready = reconcileAfterRestart();
@@ -144,32 +196,27 @@ export function createGameServer() {
     const now = Date.now();
     for (const room of await listRooms()) {
       for (const player of room.players.filter(item => item.connected)) {
-        await updateAggregate(room.roomId, state => disconnectPlayer(state, player.uid, now, graceMs));
-        scheduleExpiry(room.roomId, player.uid);
+        await inRoom(room.roomId, "room:recover", async () => {
+          await updateAggregate(room.roomId, state => disconnectPlayer(state, player.uid, now, graceMs), { event: "room:recover" });
+          scheduleExpiry(room.roomId, player.uid);
+        });
       }
     }
   }
 
   return {
     app, io, httpServer, ready,
-    close: () => new Promise<void>(resolve => {
+    close: async () => {
       shuttingDown = true;
       for (const timer of expiryTimers.values()) clearTimeout(timer);
       expiryTimers.clear();
-      io.close(() => httpServer.close(() => resolve()));
-    }),
+      await queue.drain();
+      for (const timer of expiryTimers.values()) clearTimeout(timer);
+      expiryTimers.clear();
+      store.clearDecks();
+      await new Promise<void>(resolve => io.close(() => httpServer.close(() => resolve())));
+    },
   };
-}
-
-async function cleanupExpiredRooms(): Promise<number> {
-  const cutoff = Date.now() - cleanupAgeMs;
-  const expired = (await listRooms()).filter(state => state.room.retentionPolicy === "retain" && state.room.lastEnteredAt <= cutoff);
-  let deleted = 0;
-  for (const state of expired) {
-    const { value } = await updateAggregate(state.roomId, current => ({ deleteRoom: current.room.retentionPolicy === "retain" && current.room.lastEnteredAt <= cutoff }));
-    if (value.deleteRoom) { await deleteRoomImages(state.roomId); deleted += 1; }
-  }
-  return deleted;
 }
 
 async function cleanupAuthorized(header: string | undefined, oauth: OAuth2Client): Promise<boolean> {
